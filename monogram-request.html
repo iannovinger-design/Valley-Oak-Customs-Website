@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Request a custom plasma cut monogram from Valley Oak Customs in Austin, Arkansas.">
+    <link rel="canonical" href="https://valleyoakcustoms.com/monogram-request.html">
+    <title>Request a Monogram | Valley Oak Customs</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="brand">
+        <a class="brand-mark" href="https://www.facebook.com/ValleyOakCustoms" target="_blank" rel="noopener" aria-label="Valley Oak Customs on Facebook">
+          <img src="assets/voc-logo-small.png" alt="">
+        </a>
+        <a class="brand-text" href="index.html" aria-label="Valley Oak Customs home">
+          <strong>Valley Oak Customs</strong>
+          <small>Austin, Arkansas</small>
+        </a>
+      </div>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Main navigation">
+        <a href="index.html#gallery">Gallery</a>
+        <a href="monograms.html">Monograms</a>
+        <a href="index.html#quote">Quote Request</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="monogram-quote" class="section quote-section request-page-section">
+        <div class="section-heading">
+          <p class="eyebrow">Monogram Quote</p>
+          <h1>Request a Monogram</h1>
+          <p>Tell me the letter, wording, size, and finish you have in mind. If you have a sketch, logo, or reference photo, you can attach it here too.</p>
+        </div>
+
+        <form class="quote-form" name="monogram-quote" method="POST" data-netlify="true" netlify-honeypot="company" enctype="multipart/form-data" action="/" data-success-message="Monogram quote request sent. I will follow up after I review it.">
+          <input type="hidden" name="form-name" value="monogram-quote">
+          <p class="hidden-field">
+            <label>Company <input name="company"></label>
+          </p>
+          <label>
+            Name
+            <input name="name" type="text" autocomplete="name" required>
+          </label>
+          <label>
+            Phone
+            <input name="phone" type="tel" autocomplete="tel">
+          </label>
+          <label>
+            Email
+            <input name="email" type="email" autocomplete="email" required>
+          </label>
+          <label>
+            Letter
+            <input name="letter" type="text" maxlength="3" placeholder="Example: N" required>
+          </label>
+          <label class="full">
+            Wording or Name
+            <input name="wording" type="text" placeholder="Example: The Stewart Family, Nanna, Charlotte" required>
+          </label>
+          <label>
+            Preset Size
+            <select name="preset-size" required>
+              <option value="">Choose a size</option>
+              <option value="18 inch">18 inch</option>
+              <option value="24 inch">24 inch</option>
+              <option value="32 inch">32 inch</option>
+              <option value="custom">Custom size</option>
+            </select>
+          </label>
+          <label>
+            Finish
+            <select name="finish" required>
+              <option value="">Choose a finish</option>
+              <option value="raw steel">Raw steel</option>
+              <option value="painted">Painted</option>
+              <option value="not sure">Not sure yet</option>
+            </select>
+          </label>
+          <label class="full">
+            Notes
+            <textarea name="description" rows="5" placeholder="Tell me where it will go, colors if painted, mounting ideas, or anything you want changed from the examples."></textarea>
+          </label>
+          <label>
+            Upload Image
+            <input name="reference-image" type="file" accept="image/*,.pdf">
+          </label>
+          <p class="form-status" role="status" aria-live="polite"></p>
+          <button class="button primary form-button" type="submit">Send Monogram Request</button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="footer-brand" href="index.html#home">
+        <strong>Valley Oak Customs</strong>
+        <span>Austin, Arkansas</span>
+      </a>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a class="footer-link icon-link" href="https://www.facebook.com/ValleyOakCustoms" target="_blank" rel="noopener">
+          <span class="footer-icon facebook-icon" aria-hidden="true">f</span>
+          Facebook
+        </a>
+        <a class="footer-link icon-link" href="mailto:ian.novinger@gmail.com">
+          <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6h16v12H4z"></path>
+            <path d="m4 7 8 6 8-6"></path>
+          </svg>
+          Email
+        </a>
+        <a class="footer-link" href="index.html#quote">Quote Request</a>
+        <a class="footer-link" href="index.html#gallery">Gallery</a>
+      </nav>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
