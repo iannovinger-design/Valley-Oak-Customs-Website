@@ -15,3 +15,25 @@
   from = "/software"
   to = "/software.html"
   status = 200
+
+[[redirects]]
+  from = "/licensing-api/checkout/session"
+  to = "https://valley-oak-design-manager-licensing.netlify.app/api/v1/checkout/session"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/licensing-api/checkout/credential"
+  to = "https://valley-oak-design-manager-licensing.netlify.app/api/v1/checkout/credential"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/software/success"
+  to = "/software-success.html"
+  status = 200
+
+[[redirects]]
+  from = "/software/canceled"
+  to = "/software-canceled.html"
+  status = 200

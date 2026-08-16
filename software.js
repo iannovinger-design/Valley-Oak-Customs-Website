@@ -50,3 +50,28 @@ async function loadLatestStableRelease(section) {
 }
 
 document.querySelectorAll("[data-product]").forEach(loadLatestStableRelease);
+
+const checkoutTokenKey = "vodm-checkout-delivery-token";
+const buyButton = document.querySelector("[data-buy-design-manager]");
+const checkoutStatus = document.querySelector("[data-checkout-status]");
+
+if (buyButton) {
+  buyButton.addEventListener("click", async () => {
+    buyButton.disabled = true;
+    checkoutStatus.textContent = "Opening secure Stripe Checkout…";
+    try {
+      const response = await fetch("/licensing-api/checkout/session", {
+        method: "POST",
+        credentials: "omit",
+        headers: { Accept: "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !/^https:\/\/checkout\.stripe\.com\//.test(result.checkoutUrl) || !result.deliveryToken) throw new Error();
+      sessionStorage.setItem(checkoutTokenKey, result.deliveryToken);
+      location.assign(result.checkoutUrl);
+    } catch {
+      buyButton.disabled = false;
+      checkoutStatus.textContent = "Secure checkout is temporarily unavailable. No payment was taken.";
+    }
+  });
+}
