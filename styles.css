@@ -847,7 +847,9 @@ svg.footer-icon {
 }
 
 .software-page .site-header,
-.software-page .site-footer {
+.software-page .site-footer,
+.gallery-page .site-header,
+.gallery-page .site-footer {
   background: rgba(20, 23, 19, 0.97);
   color: #f4efe5;
 }
@@ -855,7 +857,11 @@ svg.footer-icon {
 .software-page .site-nav a,
 .software-page .brand-text,
 .software-page .footer-link,
-.software-page .footer-brand {
+.software-page .footer-brand,
+.gallery-page .site-nav a,
+.gallery-page .brand-text,
+.gallery-page .footer-link,
+.gallery-page .footer-brand {
   color: inherit;
 }
 
