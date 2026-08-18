@@ -29,7 +29,7 @@ async function loadLatestStableRelease(section) {
 
     const installer = release.assets.find((asset) => product.installerPattern.test(asset.name));
     const zip = release.assets.find((asset) => product.zipPattern.test(asset.name));
-    const approvedAsset = installer || zip;
+    const approvedAsset = zip || installer;
     if (!approvedAsset) throw new Error("No approved Windows package was found");
 
     version.textContent = release.tag_name || product.fallbackVersion;
