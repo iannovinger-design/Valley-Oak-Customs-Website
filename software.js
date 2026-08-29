@@ -1,9 +1,9 @@
 const softwareProducts = {
   "design-manager": {
     repository: "iannovinger-design/Valley-Oak-Design-Manager-Releases",
-    fallbackVersion: "V1.1.1",
+    fallbackVersion: "v1.2.0",
     installerPattern: /^Valley_Oak_Customs_Design_Manager_Setup_v[\d.]+\.exe$/i,
-    zipPattern: /^Valley_Oak_Customs_Design_Manager_v[\d.]+_win-x64\.zip$/i,
+    zipPattern: /^Valley_Oak_Customs_Design_Manager_v[\d.]+(?:_win-x64)?\.zip$/i,
   },
 };
 
