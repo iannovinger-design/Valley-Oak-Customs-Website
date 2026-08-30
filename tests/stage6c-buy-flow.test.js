@@ -25,8 +25,13 @@ test("success flow clears callback material and stores no license credential", a
 
 test("launch wording states the finite offer and keeps manuals", async () => {
   const html = await readFile(new URL("software.html", root), "utf8");
+  const script = await readFile(new URL("software.js", root), "utf8");
   assert.match(html, /Early Adopter Launch — \$79 for the first 15 licenses with code EARLY20/);
   assert.match(html, /Regular price \$99/);
+  assert.match(html, /data-release-version>v1\.2\.1</);
+  assert.match(html, /Valley_Oak_Customs_Design_Manager_v1\.2\.1_win-x64\.zip/);
+  assert.match(html, /Exclude folders without deleting anything/);
+  assert.match(script, /fallbackVersion: "v1\.2\.1"/);
   assert.match(html, /Valley-Oak-Design-Manager-Quick-Start\.pdf/);
   assert.match(html, /Valley-Oak-Design-Manager-User-Manual\.pdf/);
 });
