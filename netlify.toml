@@ -6,6 +6,12 @@
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
 
+[[headers]]
+  for = "/assets/software/design-manager-latest.json"
+  [headers.values]
+    Content-Type = "application/json; charset=utf-8"
+    Cache-Control = "public, max-age=300, must-revalidate"
+
 [[redirects]]
   from = "/inventory"
   to = "/inventory.html"
