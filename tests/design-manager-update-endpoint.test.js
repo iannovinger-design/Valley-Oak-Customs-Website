@@ -42,9 +42,9 @@ test("Netlify serves the update endpoint explicitly as JSON with short revalidat
   assert.match(config, /Cache-Control = "public, max-age=300, must-revalidate"/);
 });
 
-test("development endpoint continues to advertise the approved v1.2.1 stable release", async () => {
+test("production endpoint advertises the approved v1.2.2 stable release", async () => {
   const endpoint = JSON.parse(await readFile(endpointUrl, "utf8"));
-  assert.equal(endpoint.version, "1.2.1");
-  assert.equal(endpoint.publishedUtc, "2026-08-30T13:25:53Z");
-  assert.equal(endpoint.releaseNotesUrl, "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/tag/v1.2.1");
+  assert.equal(endpoint.version, "1.2.2");
+  assert.equal(endpoint.publishedUtc, "2026-08-31T00:05:08Z");
+  assert.equal(endpoint.releaseNotesUrl, "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/tag/v1.2.2");
 });
