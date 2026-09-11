@@ -35,11 +35,14 @@ test("tester page contains the approved RC.30 customer guidance", async () => {
   assert.doesNotMatch(page, /\bRootId\b|\bGUIDs?\b|schema [0-9]|commit hash|revision conflict|database terminology/i);
 });
 
-test("all stage-one download controls are disabled and have no links", async () => {
+test("tester downloads use the approved RC.30 GitHub prerelease assets", async () => {
   const page = await readFile(pageUrl, "utf8");
-  assert.match(page, /<button[^>]*disabled[^>]*>Download RC\.30 Tester Package<\/button>/);
-  assert.match(page, /<button[^>]*disabled[^>]*>Download Installer Only<\/button>/);
-  assert.match(page, /<button[^>]*disabled[^>]*>Quick Start Guide<\/button>/);
-  assert.match(page, /<button[^>]*disabled[^>]*>User Manual<\/button>/);
-  assert.doesNotMatch(page, /github\.com\/.*rc\.30|releases\/download\/v1\.4\.0-rc\.30/i);
+  const base = "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v1.4.0-rc.30/";
+  for (const asset of [
+    "Valley_Oak_Customs_Design_Manager_v1.4.0-rc.30.zip",
+    "Valley_Oak_Customs_Design_Manager_Setup_v1.4.0-rc.30.exe",
+    "Valley.Oak.Design.Manager.Quick.Start.Guide.pdf",
+    "Valley.Oak.Design.Manager.User.Manual.pdf"
+  ]) assert.ok(page.includes(base + asset), `missing asset link: ${asset}`);
+  assert.doesNotMatch(page, /tester-disabled|disabled>Download|will be enabled/i);
 });
