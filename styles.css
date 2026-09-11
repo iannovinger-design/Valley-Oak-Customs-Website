@@ -1146,7 +1146,7 @@ svg.footer-icon {
 
 .tester-section-heading h2,
 .tester-callout h2 {
-  font-size: clamp(1.85rem, 4vw, 3.3rem);
+  font-size: clamp(1.6rem, 3vw, 2.55rem);
 }
 
 .tester-section-heading > p:not(.eyebrow),
