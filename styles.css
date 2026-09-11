@@ -1118,7 +1118,7 @@ svg.footer-icon {
 .tester-hero h1 {
   max-width: 16ch;
   margin: 0 auto 20px;
-  font-size: clamp(2.7rem, 7vw, 6.1rem);
+  font-size: clamp(2.4rem, 6.15vw, 5.35rem);
 }
 
 .tester-hero p:not(.eyebrow) {
@@ -1266,6 +1266,10 @@ svg.footer-icon {
   color: #fff7e9;
   border-color: #bf593a;
   background: #702f20;
+}
+
+.tester-safety h2 {
+  font-size: clamp(1.55rem, 2.8vw, 2.35rem);
 }
 
 .tester-safety .eyebrow {
