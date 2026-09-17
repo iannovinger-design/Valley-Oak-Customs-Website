@@ -28,10 +28,11 @@ test("launch wording states the finite offer and keeps manuals", async () => {
   const script = await readFile(new URL("software.js", root), "utf8");
   assert.match(html, /Early Adopter Launch — \$79 for the first 15 licenses with code EARLY20/);
   assert.match(html, /Regular price \$99/);
-  assert.match(html, /data-release-version>v1\.3\.1</);
-  assert.match(html, /Valley_Oak_Customs_Design_Manager_v1\.3\.1\.zip/);
-  assert.match(html, /Exclude folders without deleting anything/);
-  assert.match(script, /fallbackVersion: "v1\.3\.1"/);
+  assert.match(html, /data-release-version>v1\.4\.0</);
+  assert.match(html, /Valley_Oak_Customs_Design_Manager_v1\.4\.0_win-x64\.zip/);
+  assert.match(html, /Preview machine files safely/);
+  assert.equal((html.match(/<li><strong>/g) || []).length, 6);
+  assert.match(script, /fallbackVersion: "v1\.4\.0"/);
   assert.match(html, /Valley-Oak-Design-Manager-Quick-Start\.pdf/);
   assert.match(html, /Valley-Oak-Design-Manager-User-Manual\.pdf/);
 });
