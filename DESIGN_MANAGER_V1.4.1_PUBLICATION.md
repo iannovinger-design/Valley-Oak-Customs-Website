@@ -1,6 +1,6 @@
 # Valley Oak Design Manager v1.4.1 publication sequence
 
-Status: GitHub release staged as an unpublished draft; website changes prepared locally and not deployed.
+Status: GitHub release published as Latest at `2026-09-22T01:34:46Z`; website deployment pending.
 
 1. Manually publish the existing GitHub draft for tag `v1.4.1`, title `Valley Oak Design Manager v1.4.1`, target `main`, and mark it Latest.
 2. Read the release's exact GitHub `published_at` timestamp after publication.
