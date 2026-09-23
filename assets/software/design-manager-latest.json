@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "product": "valley-oak-design-manager",
   "channel": "stable",
-  "version": "1.4.1",
-  "publishedUtc": "2026-09-22T01:34:46Z",
+  "version": "1.4.2",
+  "publishedUtc": "2026-09-23T12:01:48Z",
   "releasePageUrl": "https://valleyoakcustoms.com/software",
-  "releaseNotesUrl": "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/tag/v1.4.1"
+  "releaseNotesUrl": "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/tag/v1.4.2",
+  "downloadUrl": "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v1.4.2/Valley_Oak_Customs_Design_Manager_v1.4.2_win-x64.zip"
 }

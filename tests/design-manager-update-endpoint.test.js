@@ -10,6 +10,7 @@ test("Design Manager update endpoint matches the stable desktop contract", async
   const endpoint = JSON.parse(source);
   assert.deepEqual(Object.keys(endpoint).sort(), [
     "channel",
+    "downloadUrl",
     "product",
     "publishedUtc",
     "releaseNotesUrl",
@@ -34,6 +35,11 @@ test("Design Manager update endpoint matches the stable desktop contract", async
   assert.equal(releaseNotes.hostname, "github.com");
   assert.match(releaseNotes.pathname, /^\/iannovinger-design\/Valley-Oak-Design-Manager-Releases\/releases\/tag\/v\d+\.\d+\.\d+$/);
   assert.ok(releaseNotes.pathname.endsWith(`/v${endpoint.version}`));
+
+  const download = new URL(endpoint.downloadUrl);
+  assert.equal(download.protocol, "https:");
+  assert.equal(download.hostname, "github.com");
+  assert.equal(download.pathname, `/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v${endpoint.version}/Valley_Oak_Customs_Design_Manager_v${endpoint.version}_win-x64.zip`);
 });
 
 test("Netlify serves the update endpoint explicitly as JSON with short revalidation", async () => {
@@ -42,9 +48,10 @@ test("Netlify serves the update endpoint explicitly as JSON with short revalidat
   assert.match(config, /Cache-Control = "public, max-age=300, must-revalidate"/);
 });
 
-test("live stable endpoint advertises the published v1.4.1 release", async () => {
+test("live stable endpoint advertises the published v1.4.2 release", async () => {
   const endpoint = JSON.parse(await readFile(endpointUrl, "utf8"));
-  assert.equal(endpoint.version, "1.4.1");
-  assert.equal(endpoint.publishedUtc, "2026-09-22T01:34:46Z");
-  assert.equal(endpoint.releaseNotesUrl, "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/tag/v1.4.1");
+  assert.equal(endpoint.version, "1.4.2");
+  assert.equal(endpoint.publishedUtc, "2026-09-23T12:01:48Z");
+  assert.equal(endpoint.releaseNotesUrl, "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/tag/v1.4.2");
+  assert.equal(endpoint.downloadUrl, "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v1.4.2/Valley_Oak_Customs_Design_Manager_v1.4.2_win-x64.zip");
 });
