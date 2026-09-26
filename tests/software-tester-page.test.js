@@ -6,7 +6,7 @@ const root = new URL("../", import.meta.url);
 const pageUrl = new URL("software-tester.html", root);
 const expectedAsset = "Valley_Oak_Design_Manager_v1.5_Preview_1.5.0-preview.1_Private_Beta.zip";
 const expectedDownload = `https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v1.5.0-preview.1/${expectedAsset}`;
-const expectedSha256 = "B120B732A1918B0BA662DD2CF7A7BF7E5E8C7CF3A81D7C61E1D6F168DAD1D66F";
+const expectedSha256 = "387A0D5C45186F234E9B2DFD272707091058BC199BBBB0C8F12DBC317E923C8B";
 
 test("tester page is unlisted and protected from indexing", async () => {
   const [page, sitemap, config, entries] = await Promise.all([
