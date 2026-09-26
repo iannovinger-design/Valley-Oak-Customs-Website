@@ -1176,6 +1176,16 @@ svg.footer-icon {
   color: #d9d5cb;
 }
 
+.tester-filename {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tester-checksum code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .tester-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1300,7 +1310,17 @@ svg.footer-icon {
     grid-template-columns: 1fr;
   }
 
-  .tester-actions {
+  .tester-filename {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tester-checksum code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tester-actions {
     display: grid;
   }
 }

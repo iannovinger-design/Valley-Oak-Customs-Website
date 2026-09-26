@@ -4,6 +4,9 @@ import { readFile, readdir } from "node:fs/promises";
 
 const root = new URL("../", import.meta.url);
 const pageUrl = new URL("software-tester.html", root);
+const expectedAsset = "Valley_Oak_Design_Manager_v1.5_Preview_1.5.0-preview.1_Private_Beta.zip";
+const expectedDownload = `https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v1.5.0-preview.1/${expectedAsset}`;
+const expectedSha256 = "B120B732A1918B0BA662DD2CF7A7BF7E5E8C7CF3A81D7C61E1D6F168DAD1D66F";
 
 test("tester page is unlisted and protected from indexing", async () => {
   const [page, sitemap, config, entries] = await Promise.all([
@@ -21,28 +24,39 @@ test("tester page is unlisted and protected from indexing", async () => {
   assert.match(config, /from = "\/software\/tester"[\s\S]*to = "\/software-tester\.html"[\s\S]*status = 200/);
 });
 
-test("tester page contains the approved RC.30 customer guidance", async () => {
+test("tester page contains the approved v1.5 private-preview guidance", async () => {
   const page = await readFile(pageUrl, "utf8");
   for (const text of [
-    "Valley Oak Design Manager 1.4 Release Candidate",
-    "Private Tester Build",
-    "Version 1.4.0-rc.30",
-    "Set up folder visibility and search",
-    "Refresh related files",
-    "Design Manager does not execute TAP or NC machine programs",
-    "Settings → Export Diagnostics"
+    "Valley Oak Design Manager v1.5 Private Preview",
+    "Version 1.5.0-preview.1",
+    "Private Beta · Invited Testers Only",
+    "installs separately from the current public v1.4.x version",
+    "Private Beta Agreement",
+    "Open Design Workspace",
+    "Design → SheetCam JOB → TAP/NC",
+    "Always verify a machine file before cutting",
+    "Remove the Preview without removing v1.4"
   ]) assert.ok(page.includes(text), `missing: ${text}`);
-  assert.doesNotMatch(page, /\bRootId\b|\bGUIDs?\b|schema [0-9]|commit hash|revision conflict|database terminology/i);
+  assert.doesNotMatch(page, /Phase 4|SHOPPC|C:\\|source commit|test fixture|development path|transaction head/i);
 });
 
-test("tester downloads use the approved RC.30 GitHub prerelease assets", async () => {
+test("tester download uses the exact validated private-beta ZIP", async () => {
   const page = await readFile(pageUrl, "utf8");
-  const base = "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v1.4.0-rc.30/";
-  for (const asset of [
-    "Valley_Oak_Customs_Design_Manager_v1.4.0-rc.30.zip",
-    "Valley_Oak_Customs_Design_Manager_Setup_v1.4.0-rc.30.exe",
-    "Valley.Oak.Design.Manager.Quick.Start.Guide.pdf",
-    "Valley.Oak.Design.Manager.User.Manual.pdf"
-  ]) assert.ok(page.includes(base + asset), `missing asset link: ${asset}`);
+  assert.ok(page.includes(expectedDownload), "missing exact private-preview download URL");
+  assert.ok(page.includes(expectedSha256), "missing exact private-preview SHA-256");
+  assert.equal((page.match(new RegExp(expectedAsset.replaceAll(".", "\\."), "g")) || []).length, 1);
   assert.doesNotMatch(page, /tester-disabled|disabled>Download|will be enabled/i);
+});
+
+test("public v1.4.2 software surfaces remain stable-only", async () => {
+  const [software, script, endpoint] = await Promise.all([
+    readFile(new URL("software.html", root), "utf8"),
+    readFile(new URL("software.js", root), "utf8"),
+    readFile(new URL("assets/software/design-manager-latest.json", root), "utf8")
+  ]);
+  assert.match(software, /Current stable[\s\S]*v1\.4\.2/);
+  assert.match(software, /Download v1\.4\.2/);
+  assert.match(endpoint, /"version": "1\.4\.2"/);
+  assert.match(endpoint, /Valley_Oak_Customs_Design_Manager_v1\.4\.2_win-x64\.zip/);
+  assert.doesNotMatch(software + script + endpoint, /1\.5\.0-preview\.1|Private Preview|Private_Beta/);
 });
