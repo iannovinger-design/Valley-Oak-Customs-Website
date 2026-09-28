@@ -6,7 +6,7 @@ const root = new URL("../", import.meta.url);
 const pageUrl = new URL("software-tester.html", root);
 const expectedAsset = "Valley_Oak_Design_Manager_v1.5_Preview_1.5.0-preview.1_Private_Beta.zip";
 const expectedDownload = `https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v1.5.0-preview.1/${expectedAsset}`;
-const expectedSha256 = "387A0D5C45186F234E9B2DFD272707091058BC199BBBB0C8F12DBC317E923C8B";
+const expectedSha256 = "DA676BCD82719B88051B8461F5A69C870B1CB1558D0BFD5CBB5FD2AD624034B2";
 
 test("tester page is unlisted and protected from indexing", async () => {
   const [page, sitemap, config, entries] = await Promise.all([
@@ -48,15 +48,15 @@ test("tester download uses the exact validated private-beta ZIP", async () => {
   assert.doesNotMatch(page, /tester-disabled|disabled>Download|will be enabled/i);
 });
 
-test("public v1.4.2 software surfaces remain stable-only", async () => {
+test("public v1.5.0 software surfaces remain stable-only", async () => {
   const [software, script, endpoint] = await Promise.all([
     readFile(new URL("software.html", root), "utf8"),
     readFile(new URL("software.js", root), "utf8"),
     readFile(new URL("assets/software/design-manager-latest.json", root), "utf8")
   ]);
-  assert.match(software, /Current stable[\s\S]*v1\.4\.2/);
-  assert.match(software, /Download v1\.4\.2/);
-  assert.match(endpoint, /"version": "1\.4\.2"/);
-  assert.match(endpoint, /Valley_Oak_Customs_Design_Manager_v1\.4\.2_win-x64\.zip/);
-  assert.doesNotMatch(software + script + endpoint, /1\.5\.0-preview\.1|Private Preview|Private_Beta/);
+  assert.match(software, /Current stable[\s\S]*v1\.5\.0/);
+  assert.match(software, /Download v1\.5\.0/);
+  assert.match(endpoint, /"version": "1\.5\.0"/);
+  assert.match(endpoint, /Valley_Oak_Customs_Design_Manager_v1\.5\.0_win-x64\.zip/);
+  assert.doesNotMatch(software + script + endpoint, /1\.5\.0-preview\.1|Private Preview|Private_Beta|REHEARSAL|rc\.1/i);
 });

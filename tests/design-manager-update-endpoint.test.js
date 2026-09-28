@@ -48,10 +48,10 @@ test("Netlify serves the update endpoint explicitly as JSON with short revalidat
   assert.match(config, /Cache-Control = "public, max-age=300, must-revalidate"/);
 });
 
-test("live stable endpoint advertises the published v1.4.2 release", async () => {
+test("live stable endpoint advertises the published v1.5.0 release", async () => {
   const endpoint = JSON.parse(await readFile(endpointUrl, "utf8"));
-  assert.equal(endpoint.version, "1.4.2");
-  assert.equal(endpoint.publishedUtc, "2026-09-23T12:01:48Z");
-  assert.equal(endpoint.releaseNotesUrl, "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/tag/v1.4.2");
-  assert.equal(endpoint.downloadUrl, "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v1.4.2/Valley_Oak_Customs_Design_Manager_v1.4.2_win-x64.zip");
+  assert.equal(endpoint.version, "1.5.0");
+  assert.equal(endpoint.publishedUtc, "2026-09-27T23:43:32Z");
+  assert.equal(endpoint.releaseNotesUrl, "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/tag/v1.5.0");
+  assert.equal(endpoint.downloadUrl, "https://github.com/iannovinger-design/Valley-Oak-Design-Manager-Releases/releases/download/v1.5.0/Valley_Oak_Customs_Design_Manager_v1.5.0_win-x64.zip");
 });
