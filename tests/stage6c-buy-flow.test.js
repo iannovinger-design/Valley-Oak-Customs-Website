@@ -23,14 +23,16 @@ test("success flow clears callback material and stores no license credential", a
   assert.match(source, /do not submit another payment/i);
 });
 
-test("launch wording states the finite offer and keeps manuals", async () => {
+test("v1.6 launch wording keeps licensing, checkout, and manuals without extending the old promotion", async () => {
   const html = await readFile(new URL("software.html", root), "utf8");
   const script = await readFile(new URL("software.js", root), "utf8");
-  assert.match(html, /Early Adopter Launch — \$79 for the first 15 licenses with code EARLY20/);
-  assert.match(html, /Regular price \$99/);
-  assert.match(html, /data-release-version>v1\.5\.0</);
+  assert.doesNotMatch(html, /Early Adopter Launch|EARLY20/);
+  assert.match(html, /A \$99 lifetime Design Manager 1\.x license activates up to two PCs/);
+  assert.match(html, /data-buy-design-manager>Buy Design Manager — \$99/);
+  assert.match(html, /data-release-version>v1\.6\.0</);
   assert.match(html, /Valley_Oak_Customs_Design_Manager_v1\.5\.0_win-x64\.zip/);
-  assert.match(html, /Review related manufacturing files/);
+  assert.match(html, /Connect Plasma and Laser work/);
+  assert.match(html, /Upgrade with a verified safety backup/);
   assert.equal((html.match(/<li><strong>/g) || []).length, 6);
   assert.match(script, /fallbackVersion: "v1\.5\.0"/);
   assert.match(html, /Valley-Oak-Design-Manager-Quick-Start\.pdf/);
