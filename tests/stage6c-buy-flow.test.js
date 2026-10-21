@@ -23,10 +23,11 @@ test("success flow clears callback material and stores no license credential", a
   assert.match(source, /do not submit another payment/i);
 });
 
-test("v1.6 launch wording keeps licensing, checkout, and manuals without extending the old promotion", async () => {
+test("v1.6 launch wording keeps the approved finite EARLY20 offer, licensing, checkout, and manuals", async () => {
   const html = await readFile(new URL("software.html", root), "utf8");
   const script = await readFile(new URL("software.js", root), "utf8");
-  assert.doesNotMatch(html, /Early Adopter Launch|EARLY20/);
+  assert.match(html, /Early Adopter Launch — \$79 for the first 15 licenses with code EARLY20\. Regular price \$99\./);
+  assert.match(html, /Stripe confirms availability and the final price during checkout\./);
   assert.match(html, /A \$99 lifetime Design Manager 1\.x license activates up to two PCs/);
   assert.match(html, /data-buy-design-manager>Buy Design Manager — \$99/);
   assert.match(html, /data-release-version>v1\.6\.0</);
