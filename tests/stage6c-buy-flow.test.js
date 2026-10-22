@@ -31,11 +31,11 @@ test("v1.6 launch wording keeps the approved finite EARLY20 offer, licensing, ch
   assert.match(html, /A \$99 lifetime Design Manager 1\.x license activates up to two PCs/);
   assert.match(html, /data-buy-design-manager>Buy Design Manager — \$99/);
   assert.match(html, /data-release-version>v1\.6\.0</);
-  assert.match(html, /Valley_Oak_Customs_Design_Manager_v1\.5\.0_win-x64\.zip/);
+  assert.match(html, /Valley_Oak_Customs_Design_Manager_Setup_v1\.6\.0\.exe/);
   assert.match(html, /Connect Plasma and Laser work/);
   assert.match(html, /Upgrade with a verified safety backup/);
   assert.equal((html.match(/<li><strong>/g) || []).length, 6);
-  assert.match(script, /fallbackVersion: "v1\.5\.0"/);
+  assert.match(script, /fallbackVersion: "v1\.6\.0"/);
   assert.match(html, /Valley-Oak-Design-Manager-Quick-Start\.pdf/);
   assert.match(html, /Valley-Oak-Design-Manager-User-Manual\.pdf/);
 });
