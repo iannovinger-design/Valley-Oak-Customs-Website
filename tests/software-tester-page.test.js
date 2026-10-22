@@ -48,15 +48,16 @@ test("tester download uses the exact validated private-beta ZIP", async () => {
   assert.doesNotMatch(page, /tester-disabled|disabled>Download|will be enabled/i);
 });
 
-test("public v1.5.0 software surfaces remain stable-only", async () => {
+test("public v1.6 page and stable release endpoint advertise only the approved release", async () => {
   const [software, script, endpoint] = await Promise.all([
     readFile(new URL("software.html", root), "utf8"),
     readFile(new URL("software.js", root), "utf8"),
     readFile(new URL("assets/software/design-manager-latest.json", root), "utf8")
   ]);
-  assert.match(software, /Current stable[\s\S]*v1\.5\.0/);
-  assert.match(software, /Download v1\.5\.0/);
-  assert.match(endpoint, /"version": "1\.5\.0"/);
-  assert.match(endpoint, /Valley_Oak_Customs_Design_Manager_v1\.5\.0_win-x64\.zip/);
+  assert.match(software, /Current stable[\s\S]*v1\.6\.0/);
+  assert.match(software, /Download current stable/);
+  assert.match(endpoint, /"version": "1\.6\.0"/);
+  assert.match(endpoint, /Valley_Oak_Customs_Design_Manager_Setup_v1\.6\.0\.exe/);
+  assert.match(script, /fallbackVersion: "v1\.6\.0"/);
   assert.doesNotMatch(software + script + endpoint, /1\.5\.0-preview\.1|Private Preview|Private_Beta|REHEARSAL|rc\.1/i);
 });
