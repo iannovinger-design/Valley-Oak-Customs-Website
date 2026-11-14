@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { access, readFile } from "node:fs/promises";
 
 const root = new URL("../", import.meta.url);
@@ -21,7 +22,8 @@ test("product metadata is canonical, parseable, and avoids unapproved claims", a
   assert.match(html, /rel="canonical" href="https:\/\/valleyoakcustoms\.com\/products\/1955-chevy-cameo"/);
   assert.match(html, /property="og:type" content="product"/);
   assert.match(html, /property="og:url" content="https:\/\/valleyoakcustoms\.com\/products\/1955-chevy-cameo"/);
-  assert.doesNotMatch(html, /property="og:image"/);
+  assert.match(html, /property="og:image" content="https:\/\/valleyoakcustoms\.com\/assets\/products\/1955-chevy-cameo\.jpg"/);
+  assert.match(html, /property="og:image:alt" content="Representative 1955 Chevy Cameo design image"/);
   assert.doesNotMatch(html, /schema\.org\/(?:InStock|OutOfStock|PreOrder|BackOrder)/);
   const block = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
   assert.ok(block);
@@ -32,16 +34,26 @@ test("product metadata is canonical, parseable, and avoids unapproved claims", a
   assert.equal(data.material, "16-gauge steel");
   assert.equal(data.offers.price, "30.00");
   assert.equal(data.offers.priceCurrency, "USD");
-  assert.equal(data.image, undefined);
+  assert.equal(data.image, "https://valleyoakcustoms.com/assets/products/1955-chevy-cameo.jpg");
   assert.equal(data.offers.availability, undefined);
 });
 
-test("photo remains explicitly blocked until owner approval", async () => {
+test("approved representative image and disclosure are present", async () => {
   const html = await readFile(productPageUrl, "utf8");
   const homepage = await readFile(new URL("index.html", root), "utf8");
-  assert.match(html, /data-photo-status="awaiting-owner-approval"/);
-  assert.match(homepage, /data-photo-status="awaiting-owner-approval"/);
+  assert.match(html, /src="\/assets\/products\/1955-chevy-cameo\.jpg"/);
+  assert.match(homepage, /src="\/assets\/products\/1955-chevy-cameo\.jpg"/);
+  assert.match(html, /Design image shown\. Actual finished sign may vary\./);
+  assert.match(html, /alt="Representative 1955 Chevy Cameo design image"/);
   assert.doesNotMatch(html, /cffaa03a665f4c048631a9addc43d9c0/);
+});
+
+test("approved source copy is exact and web derivative is separate", async () => {
+  const original = await readFile(new URL("assets/products/1955-chevy-cameo-original.png", root));
+  const web = await readFile(new URL("assets/products/1955-chevy-cameo.jpg", root));
+  assert.equal(createHash("sha256").update(original).digest("hex").toUpperCase(), "912B355DB2FEFBF8BC64651C5BC15324332067BD6EBC36AB54B1FF5CA70E71F4");
+  assert.notDeepEqual(web, original);
+  assert.ok(web.length > 0);
 });
 
 test("homepage, clean route, sitemap, and inquiry context include the product", async () => {
