@@ -1,6 +1,21 @@
 const menuButton = document.querySelector(".menu-toggle");
 const nav = document.querySelector(".site-nav");
 const quoteForms = document.querySelectorAll(".quote-form");
+const productReferences = {
+  "VOC-TS-015": "1955 Chevy Cameo (VOC-TS-015)",
+};
+
+const requestedProduct = new URLSearchParams(window.location.search).get("product");
+const requestedProductReference = requestedProduct ? productReferences[requestedProduct] : undefined;
+
+if (requestedProductReference) {
+  const productReference = document.querySelector("#product-reference");
+  const description = document.querySelector(".quote-form textarea[name='description']");
+  if (productReference instanceof HTMLInputElement) productReference.value = requestedProductReference;
+  if (description instanceof HTMLTextAreaElement && !description.value.trim()) {
+    description.value = `I'm asking about ${requestedProductReference}.\n\n`;
+  }
+}
 
 if (menuButton && nav) {
   menuButton.addEventListener("click", () => {
