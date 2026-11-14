@@ -28,6 +28,11 @@
   status = 200
 
 [[redirects]]
+  from = "/products/1955-chevy-cameo"
+  to = "/products/1955-chevy-cameo.html"
+  status = 200
+
+[[redirects]]
   from = "/software"
   to = "/software.html"
   status = 200
