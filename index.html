@@ -53,6 +53,7 @@
         <span></span>
       </button>
       <nav id="site-nav" class="site-nav" aria-label="Main navigation">
+        <a href="#available">Available Now</a>
         <a href="#gallery">Gallery</a>
         <a href="#about">About</a>
         <a href="#quote">Quote Request</a>
@@ -70,6 +71,28 @@
             <a class="button primary" href="#quote">Request a Quote</a>
             <a class="button secondary" href="#gallery">View Gallery</a>
           </div>
+        </div>
+      </section>
+
+      <section id="available" class="section available-section">
+        <div class="section-heading">
+          <p class="eyebrow">Available Now</p>
+          <h2>Current Valley Oak Customs products</h2>
+          <p>Ask about a current product before it is gone. Product details are confirmed with you before any sale.</p>
+        </div>
+        <div class="available-product-grid">
+          <a class="available-product-card" href="/products/1955-chevy-cameo">
+            <div class="product-photo-placeholder" data-photo-status="awaiting-owner-approval" role="img" aria-label="Product photo awaiting owner approval">
+              <span>Product photo awaiting owner approval</span>
+            </div>
+            <div class="available-product-copy">
+              <p class="eyebrow">VOC-TS-015</p>
+              <h3>1955 Chevy Cameo</h3>
+              <p>16-gauge steel</p>
+              <strong>$30.00</strong>
+              <span class="card-action">View product</span>
+            </div>
+          </a>
         </div>
       </section>
 
@@ -160,6 +183,7 @@
 
         <form class="quote-form" name="quote-request" method="POST" data-netlify="true" netlify-honeypot="company" enctype="multipart/form-data" action="/">
           <input type="hidden" name="form-name" value="quote-request">
+          <input id="product-reference" type="hidden" name="product-reference" value="">
           <p class="hidden-field">
             <label>Company <input name="company"></label>
           </p>
