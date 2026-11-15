@@ -23,6 +23,11 @@
     Cache-Control = "public, max-age=300, must-revalidate"
 
 [[redirects]]
+  from = "/product-inquiry"
+  to = "/product-inquiry.html"
+  status = 200
+
+[[redirects]]
   from = "/inventory"
   to = "/inventory.html"
   status = 200

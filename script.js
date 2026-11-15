@@ -68,3 +68,55 @@ quoteForms.forEach((quoteForm) => {
     }
   });
 });
+
+// Dedicated product inquiry form. Query values are displayed with textContent/value only.
+const productInquiryForm = document.querySelector("#product-inquiry-form");
+if (productInquiryForm instanceof HTMLFormElement) {
+  const inquiryParameters = new URLSearchParams(window.location.search);
+  const inquiryProduct = (inquiryParameters.get("product") || "").trim();
+  const inquirySku = (inquiryParameters.get("sku") || "").trim();
+  const inquiryPriceValue = inquiryParameters.get("price") || "";
+  const inquiryPrice = /^(?:0|[1-9]\d*)(?:\.\d{2})$/.test(inquiryPriceValue) ? inquiryPriceValue : "";
+  const inquirySlugValue = inquiryParameters.get("slug") || "";
+  const inquirySlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(inquirySlugValue) ? inquirySlugValue : "";
+  const productDisplay = document.querySelector("#inquiry-product-display");
+  const skuDisplay = document.querySelector("#inquiry-sku-display");
+  const priceDisplay = document.querySelector("#inquiry-price-display");
+  const productInput = document.querySelector("#inquiry-product-name");
+  const skuInput = document.querySelector("#inquiry-product-sku");
+  const priceInput = document.querySelector("#inquiry-product-price");
+  const productLink = document.querySelector("#inquiry-product-link");
+  const localFormNote = document.querySelector("#local-form-note");
+  const status = document.querySelector("#product-inquiry-status");
+  const submitButton = productInquiryForm.querySelector("[type='submit']");
+  const validProduct = inquiryProduct.length > 0 && inquiryProduct.length <= 200 && inquirySku.length > 0 && inquirySku.length <= 100 && inquiryPrice.length > 0;
+
+  if (validProduct) {
+    if (productDisplay) productDisplay.textContent = inquiryProduct;
+    if (skuDisplay) skuDisplay.textContent = inquirySku;
+    if (priceDisplay) priceDisplay.textContent = "$" + inquiryPrice;
+    if (productInput instanceof HTMLInputElement) productInput.value = inquiryProduct;
+    if (skuInput instanceof HTMLInputElement) skuInput.value = inquirySku;
+    if (priceInput instanceof HTMLInputElement) priceInput.value = inquiryPrice;
+  } else {
+    if (productDisplay) productDisplay.textContent = "Product information is missing";
+    if (status) status.textContent = "Return to Available Now and choose a product before using this form.";
+    if (submitButton instanceof HTMLButtonElement) submitButton.disabled = true;
+  }
+
+  if (productLink instanceof HTMLAnchorElement && inquirySlug) {
+    productLink.href = "/products/" + inquirySlug;
+    productLink.textContent = "Back to Product";
+  } else if (productLink instanceof HTMLAnchorElement) {
+    productLink.href = "/#available";
+    productLink.textContent = "Back to Available Now";
+  }
+
+  const isLocalPreview = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
+  if (isLocalPreview && localFormNote) localFormNote.hidden = false;
+  productInquiryForm.addEventListener("submit", (event) => {
+    if (!isLocalPreview) return;
+    event.preventDefault();
+    if (status) status.textContent = "Local preview only — the form was checked, but no customer information was sent.";
+  });
+}
