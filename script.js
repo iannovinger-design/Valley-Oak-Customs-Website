@@ -89,6 +89,7 @@ if (productInquiryForm instanceof HTMLFormElement) {
   const fulfillmentSelect = document.querySelector("#inquiry-fulfillment");
   const shippingZipField = document.querySelector("#inquiry-shipping-zip-field");
   const shippingZipInput = document.querySelector("#inquiry-shipping-zip");
+  const successPanel = document.querySelector("#product-inquiry-success");
   const localFormNote = document.querySelector("#local-form-note");
   const status = document.querySelector("#product-inquiry-status");
   const submitButton = productInquiryForm.querySelector("[type='submit']");
@@ -128,9 +129,40 @@ if (productInquiryForm instanceof HTMLFormElement) {
 
   const isLocalPreview = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
   if (isLocalPreview && localFormNote) localFormNote.hidden = false;
-  productInquiryForm.addEventListener("submit", (event) => {
-    if (!isLocalPreview) return;
+  let inquirySubmissionPending = false;
+  productInquiryForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (status) status.textContent = "Local preview only — the form was checked, but no customer information was sent.";
+    if (isLocalPreview) {
+      if (status) status.textContent = "Local preview only — the form was checked, but no customer information was sent.";
+      return;
+    }
+    if (inquirySubmissionPending) return;
+
+    inquirySubmissionPending = true;
+    if (submitButton instanceof HTMLButtonElement) submitButton.disabled = true;
+    if (status) {
+      status.textContent = "Sending product inquiry...";
+      status.classList.remove("is-error");
+    }
+
+    try {
+      const response = await fetch(productInquiryForm.action, {
+        method: "POST",
+        body: new FormData(productInquiryForm),
+      });
+      if (!response.ok) throw new Error("Product inquiry submission failed");
+
+      productInquiryForm.reset();
+      updateShippingZip();
+      productInquiryForm.hidden = true;
+      if (successPanel) successPanel.hidden = false;
+    } catch (error) {
+      inquirySubmissionPending = false;
+      if (submitButton instanceof HTMLButtonElement) submitButton.disabled = false;
+      if (status) {
+        status.textContent = "That did not send. Please try again, or contact Valley Oak Customs directly.";
+        status.classList.add("is-error");
+      }
+    }
   });
 }

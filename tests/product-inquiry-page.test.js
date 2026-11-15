@@ -9,21 +9,24 @@ async function source(name) {
   return readFile(new URL(name, root), "utf8");
 }
 
-function executeInquiry(script, search, hostname = "deploy-preview-21--dynamic-fox-921683.netlify.app") {
+function executeInquiry(script, search, hostname = "deploy-preview-22--dynamic-fox-921683.netlify.app", fetchImpl = async () => ({ ok: true })) {
   class Element {
-    constructor() { this.textContent = ""; this.value = ""; this.disabled = false; this.hidden = true; this.href = ""; this.listeners = {}; }
+    constructor() { this.textContent = ""; this.value = ""; this.disabled = false; this.hidden = true; this.href = ""; this.listeners = {}; this.classes = new Set(); this.classList = { add: name => this.classes.add(name), remove: name => this.classes.delete(name) }; }
     addEventListener(name, callback) { this.listeners[name] = callback; }
   }
-  class HTMLFormElement extends Element { querySelector() { return elements.button; } }
+  class HTMLFormElement extends Element { constructor() { super(); this.action = "/product-inquiry"; this.resetCount = 0; } querySelector() { return elements.button; } reset() { this.resetCount += 1; } }
   class HTMLInputElement extends Element {}
   class HTMLSelectElement extends Element {}
   class HTMLButtonElement extends Element {}
   class HTMLTextAreaElement extends Element {}
   class HTMLAnchorElement extends Element {}
-  const elements = { form: new HTMLFormElement(), button: new HTMLButtonElement(), product: new Element(), sku: new Element(), price: new Element(), productInput: new HTMLInputElement(), skuInput: new HTMLInputElement(), priceInput: new HTMLInputElement(), fulfillment: new HTMLSelectElement(), shippingZipField: new Element(), shippingZipInput: new HTMLInputElement(), link: new HTMLAnchorElement(), localNote: new Element(), status: new Element() };
+  const elements = { form: new HTMLFormElement(), button: new HTMLButtonElement(), product: new Element(), sku: new Element(), price: new Element(), productInput: new HTMLInputElement(), skuInput: new HTMLInputElement(), priceInput: new HTMLInputElement(), fulfillment: new HTMLSelectElement(), shippingZipField: new Element(), shippingZipInput: new HTMLInputElement(), successPanel: new Element(), link: new HTMLAnchorElement(), localNote: new Element(), status: new Element(), fetchCalls: [] };
+  elements.form.hidden = false;
   elements.fulfillment.value = "Not sure yet";
-  const selectors = new Map([["#product-inquiry-form", elements.form], ["#inquiry-product-display", elements.product], ["#inquiry-sku-display", elements.sku], ["#inquiry-price-display", elements.price], ["#inquiry-product-name", elements.productInput], ["#inquiry-product-sku", elements.skuInput], ["#inquiry-product-price", elements.priceInput], ["#inquiry-fulfillment", elements.fulfillment], ["#inquiry-shipping-zip-field", elements.shippingZipField], ["#inquiry-shipping-zip", elements.shippingZipInput], ["#inquiry-product-link", elements.link], ["#local-form-note", elements.localNote], ["#product-inquiry-status", elements.status]]);
-  vm.runInNewContext(script, { URLSearchParams, window: { location: { search, hostname } }, document: { querySelector: selector => selectors.get(selector) ?? null, querySelectorAll: () => [] }, HTMLFormElement, HTMLInputElement, HTMLSelectElement, HTMLButtonElement, HTMLTextAreaElement, HTMLAnchorElement, FormData: class {} });
+  const selectors = new Map([["#product-inquiry-form", elements.form], ["#inquiry-product-display", elements.product], ["#inquiry-sku-display", elements.sku], ["#inquiry-price-display", elements.price], ["#inquiry-product-name", elements.productInput], ["#inquiry-product-sku", elements.skuInput], ["#inquiry-product-price", elements.priceInput], ["#inquiry-fulfillment", elements.fulfillment], ["#inquiry-shipping-zip-field", elements.shippingZipField], ["#inquiry-shipping-zip", elements.shippingZipInput], ["#product-inquiry-success", elements.successPanel], ["#inquiry-product-link", elements.link], ["#local-form-note", elements.localNote], ["#product-inquiry-status", elements.status]]);
+  class FormData { constructor(form) { this.form = form; } }
+  const fetch = (...args) => { elements.fetchCalls.push(args); return fetchImpl(...args); };
+  vm.runInNewContext(script, { URLSearchParams, window: { location: { search, hostname } }, document: { querySelector: selector => selectors.get(selector) ?? null, querySelectorAll: () => [] }, HTMLFormElement, HTMLInputElement, HTMLSelectElement, HTMLButtonElement, HTMLTextAreaElement, HTMLAnchorElement, FormData, fetch });
   return elements;
 }
 
@@ -109,13 +112,60 @@ test("invalid, missing, and malicious return references use the Available Now fa
   }
 });
 
-test("local preview submission is intercepted while hosted submission remains native Netlify behavior", async () => {
+test("local preview does not submit customer information", async () => {
   const script = await source("script.js");
   const query = "?product=1955+Chevy+Cameo&sku=VOC-TS-015&price=30.00&slug=1955-chevy-cameo";
-  const local = executeInquiry(script, query, "127.0.0.1"); let prevented = false; local.form.listeners.submit({ preventDefault: () => { prevented = true; } });
+  const local = executeInquiry(script, query, "127.0.0.1"); let prevented = false; await local.form.listeners.submit({ preventDefault: () => { prevented = true; } });
   assert.equal(prevented, true); assert.equal(local.localNote.hidden, false); assert.match(local.status.textContent, /no customer information was sent/);
-  const hosted = executeInquiry(script, query); prevented = false; hosted.form.listeners.submit({ preventDefault: () => { prevented = true; } });
-  assert.equal(prevented, false); assert.equal(hosted.localNote.hidden, true);
+  assert.equal(local.fetchCalls.length, 0);
+});
+
+test("hosted success waits for acceptance, prevents concurrent duplicates, and shows a return path", async () => {
+  const [html, script] = await Promise.all([source("product-inquiry.html"), source("script.js")]);
+  let resolveSubmission;
+  const pendingResponse = new Promise(resolve => { resolveSubmission = resolve; });
+  const elements = executeInquiry(script, "?product=1955+Chevy+Cameo&sku=VOC-TS-015&price=30.00&slug=1955-chevy-cameo", undefined, () => pendingResponse);
+  let prevented = 0;
+  const first = elements.form.listeners.submit({ preventDefault: () => { prevented += 1; } });
+  const second = elements.form.listeners.submit({ preventDefault: () => { prevented += 1; } });
+  assert.equal(elements.fetchCalls.length, 1);
+  assert.equal(elements.button.disabled, true);
+  assert.equal(elements.successPanel.hidden, true);
+  resolveSubmission({ ok: true });
+  await Promise.all([first, second]);
+  assert.equal(prevented, 2);
+  assert.equal(elements.form.hidden, true);
+  assert.equal(elements.successPanel.hidden, false);
+  assert.equal(elements.form.resetCount, 1);
+  assert.equal(elements.fetchCalls[0][0], "/product-inquiry");
+  assert.equal(elements.fetchCalls[0][1].method, "POST");
+  assert.equal(elements.fetchCalls[0][1].body.form, elements.form);
+  assert.match(html, /Thanks\. I got your product inquiry\./);
+  assert.match(html, /href="\/">Return to Valley Oak Customs<\/a>/);
+});
+
+test("hosted failure keeps product information and never shows false success", async () => {
+  const script = await source("script.js");
+  const elements = executeInquiry(script, "?product=1955+Chevy+Cameo&sku=VOC-TS-015&price=30.00&slug=1955-chevy-cameo", undefined, async () => ({ ok: false }));
+  await elements.form.listeners.submit({ preventDefault() {} });
+  assert.equal(elements.productInput.value, "1955 Chevy Cameo");
+  assert.equal(elements.skuInput.value, "VOC-TS-015");
+  assert.equal(elements.priceInput.value, "30.00");
+  assert.equal(elements.form.hidden, false);
+  assert.equal(elements.successPanel.hidden, true);
+  assert.equal(elements.form.resetCount, 0);
+  assert.equal(elements.button.disabled, false);
+  assert.match(elements.status.textContent, /did not send/);
+  assert.equal(elements.status.classes.has("is-error"), true);
+});
+
+test("existing Quote Request submission behavior remains separate", async () => {
+  const [homepage, script] = await Promise.all([source("index.html"), source("script.js")]);
+  assert.match(homepage, /<form class="quote-form" name="quote-request"[^>]+action="\/"/);
+  const quoteHandler = script.match(/quoteForms\.forEach[\s\S]*?\n\}\);/)?.[0] || "";
+  assert.match(quoteHandler, /Quote request sent\./);
+  assert.match(quoteHandler, /fetch\("\/",/);
+  assert.match(quoteHandler, /form\.reset\(\)/);
 });
 
 test("approved responsive layout is preserved without synthetic or private local content", async () => {
