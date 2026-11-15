@@ -34,7 +34,7 @@
             <a class="text-link" id="inquiry-product-link" href="/#available">Back to Available Now</a>
           </div>
 
-          <form id="product-inquiry-form" class="product-inquiry-form" name="product-inquiry" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+          <form id="product-inquiry-form" class="product-inquiry-form" name="product-inquiry" method="POST" action="/product-inquiry" data-netlify="true" netlify-honeypot="bot-field">
             <input type="hidden" name="form-name" value="product-inquiry">
             <p class="form-honeypot" hidden><label>Do not fill this out: <input name="bot-field"></label></p>
             <input id="inquiry-product-name" type="hidden" name="product_name">
@@ -44,7 +44,11 @@
               <label>Name <input name="customer_name" autocomplete="name" required></label>
               <label>Email <input type="email" name="email" autocomplete="email" required></label>
               <label>Phone <span class="optional">Optional</span><input type="tel" name="phone" autocomplete="tel"></label>
-              <label>Pickup or shipping <select name="fulfillment_interest"><option value="">Not sure yet</option><option value="pickup">Pickup</option><option value="shipping">Shipping</option></select></label>
+              <label>Pickup or shipping <select id="inquiry-fulfillment" name="fulfillment_interest"><option value="Not sure yet" selected>Not sure yet</option><option value="Local pickup">Local pickup</option><option value="Shipping — request a quote">Shipping — request a quote</option></select></label>
+            </div>
+            <div id="inquiry-shipping-zip-field" class="shipping-zip-field" hidden>
+              <label>Shipping ZIP code <span class="optional">Optional</span><input id="inquiry-shipping-zip" name="shipping_zip" inputmode="numeric" autocomplete="postal-code" maxlength="10" placeholder="For example, 72007" disabled></label>
+              <p class="form-help">This helps estimate shipping costs. A complete mailing address is not needed for an inquiry.</p>
             </div>
             <label>Questions or customization notes <span class="optional">Optional</span><textarea name="questions" rows="5"></textarea></label>
             <p id="local-form-note" class="local-form-note" hidden>Local preview: submitting here will not send customer information.</p>

@@ -86,6 +86,9 @@ if (productInquiryForm instanceof HTMLFormElement) {
   const skuInput = document.querySelector("#inquiry-product-sku");
   const priceInput = document.querySelector("#inquiry-product-price");
   const productLink = document.querySelector("#inquiry-product-link");
+  const fulfillmentSelect = document.querySelector("#inquiry-fulfillment");
+  const shippingZipField = document.querySelector("#inquiry-shipping-zip-field");
+  const shippingZipInput = document.querySelector("#inquiry-shipping-zip");
   const localFormNote = document.querySelector("#local-form-note");
   const status = document.querySelector("#product-inquiry-status");
   const submitButton = productInquiryForm.querySelector("[type='submit']");
@@ -111,6 +114,17 @@ if (productInquiryForm instanceof HTMLFormElement) {
     productLink.href = "/#available";
     productLink.textContent = "Back to Available Now";
   }
+
+  const updateShippingZip = () => {
+    const shippingSelected = fulfillmentSelect instanceof HTMLSelectElement && fulfillmentSelect.value === "Shipping — request a quote";
+    if (shippingZipField) shippingZipField.hidden = !shippingSelected;
+    if (shippingZipInput instanceof HTMLInputElement) {
+      shippingZipInput.disabled = !shippingSelected;
+      if (!shippingSelected) shippingZipInput.value = "";
+    }
+  };
+  if (fulfillmentSelect instanceof HTMLSelectElement) fulfillmentSelect.addEventListener("change", updateShippingZip);
+  updateShippingZip();
 
   const isLocalPreview = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
   if (isLocalPreview && localFormNote) localFormNote.hidden = false;

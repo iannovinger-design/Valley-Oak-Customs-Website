@@ -16,12 +16,14 @@ function executeInquiry(script, search, hostname = "deploy-preview-21--dynamic-f
   }
   class HTMLFormElement extends Element { querySelector() { return elements.button; } }
   class HTMLInputElement extends Element {}
+  class HTMLSelectElement extends Element {}
   class HTMLButtonElement extends Element {}
   class HTMLTextAreaElement extends Element {}
   class HTMLAnchorElement extends Element {}
-  const elements = { form: new HTMLFormElement(), button: new HTMLButtonElement(), product: new Element(), sku: new Element(), price: new Element(), productInput: new HTMLInputElement(), skuInput: new HTMLInputElement(), priceInput: new HTMLInputElement(), link: new HTMLAnchorElement(), localNote: new Element(), status: new Element() };
-  const selectors = new Map([["#product-inquiry-form", elements.form], ["#inquiry-product-display", elements.product], ["#inquiry-sku-display", elements.sku], ["#inquiry-price-display", elements.price], ["#inquiry-product-name", elements.productInput], ["#inquiry-product-sku", elements.skuInput], ["#inquiry-product-price", elements.priceInput], ["#inquiry-product-link", elements.link], ["#local-form-note", elements.localNote], ["#product-inquiry-status", elements.status]]);
-  vm.runInNewContext(script, { URLSearchParams, window: { location: { search, hostname } }, document: { querySelector: selector => selectors.get(selector) ?? null, querySelectorAll: () => [] }, HTMLFormElement, HTMLInputElement, HTMLButtonElement, HTMLTextAreaElement, HTMLAnchorElement, FormData: class {} });
+  const elements = { form: new HTMLFormElement(), button: new HTMLButtonElement(), product: new Element(), sku: new Element(), price: new Element(), productInput: new HTMLInputElement(), skuInput: new HTMLInputElement(), priceInput: new HTMLInputElement(), fulfillment: new HTMLSelectElement(), shippingZipField: new Element(), shippingZipInput: new HTMLInputElement(), link: new HTMLAnchorElement(), localNote: new Element(), status: new Element() };
+  elements.fulfillment.value = "Not sure yet";
+  const selectors = new Map([["#product-inquiry-form", elements.form], ["#inquiry-product-display", elements.product], ["#inquiry-sku-display", elements.sku], ["#inquiry-price-display", elements.price], ["#inquiry-product-name", elements.productInput], ["#inquiry-product-sku", elements.skuInput], ["#inquiry-product-price", elements.priceInput], ["#inquiry-fulfillment", elements.fulfillment], ["#inquiry-shipping-zip-field", elements.shippingZipField], ["#inquiry-shipping-zip", elements.shippingZipInput], ["#inquiry-product-link", elements.link], ["#local-form-note", elements.localNote], ["#product-inquiry-status", elements.status]]);
+  vm.runInNewContext(script, { URLSearchParams, window: { location: { search, hostname } }, document: { querySelector: selector => selectors.get(selector) ?? null, querySelectorAll: () => [] }, HTMLFormElement, HTMLInputElement, HTMLSelectElement, HTMLButtonElement, HTMLTextAreaElement, HTMLAnchorElement, FormData: class {} });
   return elements;
 }
 
@@ -37,13 +39,56 @@ test("Cameo uses honest unknown wording and an exact validated product slug", as
 
 test("Product Inquiry is statically discoverable by Netlify and separate from Quote Request", async () => {
   const [inquiry, homepage, config] = await Promise.all([source("product-inquiry.html"), source("index.html"), source("netlify.toml")]);
-  assert.match(inquiry, /<form[^>]+name="product-inquiry"[^>]+method="POST"[^>]+data-netlify="true"/);
+  assert.match(inquiry, /<form[^>]+name="product-inquiry"[^>]+method="POST"[^>]+action="\/product-inquiry"[^>]+data-netlify="true"/);
   assert.match(inquiry, /name="form-name" value="product-inquiry"/);
   assert.match(inquiry, /name="product_name"/); assert.match(inquiry, /name="sku"/); assert.match(inquiry, /name="displayed_price"/);
   assert.match(inquiry, /name="customer_name"[^>]*required/); assert.match(inquiry, /type="email"[^>]*required/);
   assert.match(inquiry, /class="menu-toggle"[^>]*aria-controls="site-nav"/);
   assert.match(homepage, /<form[^>]+name="quote-request"/); assert.doesNotMatch(homepage, /name="product-inquiry"/);
   assert.match(config, /from = "\/product-inquiry"[\s\S]*to = "\/product-inquiry\.html"/);
+});
+
+test("Product Inquiry submits one SKU to a clean action and preserves all intended fields", async () => {
+  const inquiry = await source("product-inquiry.html");
+  const form = inquiry.match(/<form id="product-inquiry-form"[\s\S]*?<\/form>/)?.[0] || "";
+  assert.equal((form.match(/name="sku"/g) || []).length, 1);
+  assert.match(form, /action="\/product-inquiry"/);
+  assert.doesNotMatch(form, /action="[^"]*\?/);
+  for (const field of ["product_name", "sku", "displayed_price", "customer_name", "email", "phone", "fulfillment_interest", "shipping_zip", "questions"]) {
+    assert.equal((form.match(new RegExp(`name="${field}"`, "g")) || []).length, 1, field);
+  }
+  assert.match(form, /textarea name="questions" rows="5"/);
+});
+
+test("fulfillment defaults and conditional shipping ZIP behavior are deliberate", async () => {
+  const [inquiry, script] = await Promise.all([source("product-inquiry.html"), source("script.js")]);
+  assert.match(inquiry, /<option value="Not sure yet" selected>Not sure yet<\/option>/);
+  assert.match(inquiry, /<option value="Local pickup">Local pickup<\/option>/);
+  assert.match(inquiry, /<option value="Shipping — request a quote">Shipping — request a quote<\/option>/);
+  assert.match(inquiry, /name="shipping_zip"[^>]+autocomplete="postal-code"[^>]+disabled/);
+  assert.doesNotMatch(inquiry.match(/<input id="inquiry-shipping-zip"[^>]+>/)?.[0] || "", /required/);
+
+  const elements = executeInquiry(script, "?product=Cameo&sku=VOC-TS-015&price=30.00&slug=1955-chevy-cameo");
+  assert.equal(elements.fulfillment.value, "Not sure yet");
+  assert.equal(elements.shippingZipField.hidden, true);
+  assert.equal(elements.shippingZipInput.disabled, true);
+
+  elements.fulfillment.value = "Shipping — request a quote";
+  elements.fulfillment.listeners.change();
+  assert.equal(elements.shippingZipField.hidden, false);
+  assert.equal(elements.shippingZipInput.disabled, false);
+
+  elements.shippingZipInput.value = "72007";
+  elements.fulfillment.value = "Local pickup";
+  elements.fulfillment.listeners.change();
+  assert.equal(elements.shippingZipField.hidden, true);
+  assert.equal(elements.shippingZipInput.disabled, true);
+  assert.equal(elements.shippingZipInput.value, "");
+
+  elements.fulfillment.value = "Not sure yet";
+  elements.fulfillment.listeners.change();
+  assert.equal(elements.shippingZipField.hidden, true);
+  assert.equal(elements.shippingZipInput.disabled, true);
 });
 
 test("valid inquiry prefill returns to the exact product page without unsafe HTML", async () => {
