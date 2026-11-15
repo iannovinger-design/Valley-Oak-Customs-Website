@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Ask Valley Oak Customs about a specific available product.">
+    <meta name="robots" content="noindex">
+    <title>Product Inquiry | Valley Oak Customs</title>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="product-inquiry-page">
+    <header class="site-header">
+      <div class="brand">
+        <a class="brand-mark" href="/" aria-label="Valley Oak Customs home"><img src="/assets/voc-logo-small.png" alt=""></a>
+        <a class="brand-text" href="/" aria-label="Valley Oak Customs home"><strong>Valley Oak Customs</strong><small>Austin, Arkansas</small></a>
+      </div>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav"><span></span><span></span><span></span></button>
+      <nav id="site-nav" class="site-nav" aria-label="Main navigation"><a href="/#available">Available Now</a><a href="/#gallery">Gallery</a><a href="/#about">About</a><a href="/#quote">Quote Request</a><a href="/software">Software</a></nav>
+    </header>
+
+    <main>
+      <section class="section product-inquiry-section">
+        <div class="product-inquiry-layout">
+          <div class="product-inquiry-intro">
+            <p class="eyebrow">Product Inquiry</p>
+            <h1>Ask about this product</h1>
+            <p>Send a quick question about an existing product. This is not checkout or a payment request.</p>
+            <dl class="inquiry-product-summary">
+              <div><dt>Product</dt><dd id="inquiry-product-display">Loading product…</dd></div>
+              <div><dt>SKU</dt><dd id="inquiry-sku-display">—</dd></div>
+              <div><dt>Displayed price</dt><dd id="inquiry-price-display">—</dd></div>
+            </dl>
+            <a class="text-link" id="inquiry-product-link" href="/#available">Back to Available Now</a>
+          </div>
+
+          <form id="product-inquiry-form" class="product-inquiry-form" name="product-inquiry" method="POST" action="/product-inquiry" data-netlify="true" netlify-honeypot="bot-field">
+            <input type="hidden" name="form-name" value="product-inquiry">
+            <p class="form-honeypot" hidden><label>Do not fill this out: <input name="bot-field"></label></p>
+            <input id="inquiry-product-name" type="hidden" name="product_name">
+            <input id="inquiry-product-sku" type="hidden" name="sku">
+            <input id="inquiry-product-price" type="hidden" name="displayed_price">
+            <div class="form-grid">
+              <label>Name <input name="customer_name" autocomplete="name" required></label>
+              <label>Email <input type="email" name="email" autocomplete="email" required></label>
+              <label>Phone <span class="optional">Optional</span><input type="tel" name="phone" autocomplete="tel"></label>
+              <label>Pickup or shipping <select id="inquiry-fulfillment" name="fulfillment_interest"><option value="Not sure yet" selected>Not sure yet</option><option value="Local pickup">Local pickup</option><option value="Shipping — request a quote">Shipping — request a quote</option></select></label>
+            </div>
+            <div id="inquiry-shipping-zip-field" class="shipping-zip-field" hidden>
+              <label>Shipping ZIP code <span class="optional">Optional</span><input id="inquiry-shipping-zip" name="shipping_zip" inputmode="numeric" autocomplete="postal-code" maxlength="10" placeholder="For example, 72007" disabled></label>
+              <p class="form-help">This helps estimate shipping costs. A complete mailing address is not needed for an inquiry.</p>
+            </div>
+            <label>Questions or customization notes <span class="optional">Optional</span><textarea name="questions" rows="5"></textarea></label>
+            <p id="local-form-note" class="local-form-note" hidden>Local preview: submitting here will not send customer information.</p>
+            <button class="button primary" type="submit">Send Product Inquiry</button>
+            <p id="product-inquiry-status" class="form-status" role="status" aria-live="polite"></p>
+          </form>
+
+          <section id="product-inquiry-success" class="product-inquiry-success" aria-labelledby="product-inquiry-success-heading" hidden>
+            <p class="eyebrow">Product Inquiry Sent</p>
+            <h2 id="product-inquiry-success-heading">Thanks. I got your product inquiry.</h2>
+            <p>I will review the details and follow up before any order, payment, or shipping arrangements are made.</p>
+            <a class="button primary" href="/">Return to Valley Oak Customs</a>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="footer-brand" href="/"><strong>Valley Oak Customs</strong><span>Austin, Arkansas</span></a>
+      <nav class="footer-links" aria-label="Footer navigation"><a class="footer-link" href="/#quote">Quote Request</a><a class="footer-link" href="/#gallery">Gallery</a><a class="footer-link" href="/software">Software</a></nav>
+    </footer>
+    <script src="/script.js"></script>
+  </body>
+</html>
