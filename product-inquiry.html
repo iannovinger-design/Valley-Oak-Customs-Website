@@ -33,8 +33,14 @@
             <a class="text-link" id="inquiry-product-link" href="/#available">Back to Available Now</a>
           </div>
 
-          <form id="product-inquiry-form" class="product-inquiry-form" name="product-inquiry" method="POST" action="/api/product-inquiry">
+          <form id="product-inquiry-form" class="product-inquiry-form" name="product-inquiry" method="POST" action="/product-inquiry-submit.html" data-netlify="true" netlify-honeypot="bot-field">
             <p class="form-honeypot" hidden><label>Do not fill this out: <input name="bot-field"></label></p>
+            <input type="hidden" name="product_slug">
+            <input type="hidden" name="product_name">
+            <input type="hidden" name="sku">
+            <input type="hidden" name="product_id">
+            <input type="hidden" name="displayed_price">
+            <input type="hidden" name="product_page">
             <div class="form-grid">
               <label>Name <input name="customer_name" maxlength="100" autocomplete="name" required></label>
               <label>Email <input type="email" name="email" maxlength="254" autocomplete="email" required></label>

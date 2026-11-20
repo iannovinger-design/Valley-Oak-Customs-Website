@@ -17,9 +17,13 @@ test("production-based foundation adds an empty storefront without importing a d
 });
 
 test("Product Inquiry uses the catalog endpoint and keeps its message optional", async () => {
-  const [html, script] = await Promise.all([read("product-inquiry.html"), read("script.js")]);
-  assert.match(html, /<form[^>]*action="\/api\/product-inquiry"/);
-  assert.doesNotMatch(html, /data-netlify|name="sku"/);
+  const [html, script, intake] = await Promise.all([
+    read("product-inquiry.html"), read("script.js"), read("product-inquiry-submit.html"),
+  ]);
+  assert.match(html, /<form[^>]*name="product-inquiry"[^>]*action="\/product-inquiry-submit\.html"[^>]*data-netlify="true"[^>]*netlify-honeypot="bot-field"/);
+  for (const name of ["product_slug", "product_name", "sku", "product_id", "displayed_price", "product_page"])
+    assert.match(html, new RegExp('<input type="hidden" name="' + name + '">'));
+  assert.doesNotMatch(intake, /<form/);
   assert.match(html, /What would you like to know\? \(Optional\)/);
   assert.doesNotMatch(html.match(/<textarea[^>]+>/)?.[0] ?? "", /\brequired\b/);
   assert.match(script, /fetch\("\/product-inquiry-catalog\.json"/);

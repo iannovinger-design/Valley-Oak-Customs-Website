@@ -72,7 +72,7 @@ function setupProductInquiry(form) {
   const status = document.querySelector("#product-inquiry-status");
   const success = document.querySelector("#product-inquiry-success");
   const submit = form.querySelector("[type='submit']");
-  const localPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  const localPreview = ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
   let selectedProduct;
   let pending = false;
 
@@ -119,24 +119,32 @@ function setupProductInquiry(form) {
     status.textContent = "Sending your question…";
     status.classList.remove("is-error");
     try {
-      const fields = Object.fromEntries(new FormData(form));
+      const customer = new FormData(form);
+      const fields = new URLSearchParams({
+        "form-name": "product-inquiry",
+        product_slug: selectedProduct.slug,
+        expected_price: selectedProduct.price,
+      });
+      for (const name of ["bot-field", "customer_name", "email", "fulfillment_interest", "shipping_zip", "questions"]) {
+        if (customer.has(name)) fields.set(name, customer.get(name));
+      }
       const response = await fetch(form.action, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...fields, slug: selectedProduct.slug, displayedPrice: selectedProduct.price }),
+        body: fields,
+        redirect: "error",
       });
       if (response.status === 409) {
         status.textContent = "The product price changed. Reload this page and review the new price.";
         status.classList.add("is-error");
         return;
       }
-      if (!response.ok) throw new Error();
+      if (response.status !== 204 || response.headers.get("X-VOC-Inquiry-Forwarded") !== "1") throw new Error();
       form.hidden = true;
       success.hidden = false;
     } catch {
       pending = false;
       submit.disabled = false;
-      status.textContent = "We couldn’t send your question. Please try again.";
+      status.textContent = "We couldn’t confirm your inquiry. Please wait before trying again.";
       status.classList.add("is-error");
     }
   });
