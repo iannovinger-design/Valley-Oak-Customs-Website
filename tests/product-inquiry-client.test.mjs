@@ -5,7 +5,7 @@ import vm from "node:vm";
 
 const source = await readFile(new URL("../script.js", import.meta.url), "utf8");
 
-async function browser({ local = false, accept, hold } = {}) {
+async function browser({ local = false, accept, hold, formAction = "/product-inquiry-submit.html" } = {}) {
   class Field {
     value = "";
     disabled = false;
@@ -24,7 +24,7 @@ async function browser({ local = false, accept, hold } = {}) {
     "#inquiry-product-link", "#inquiry-shipping-zip-field", "#local-form-note",
   ].map(name => [name, new Field()]));
   class HTMLFormElement extends Field {
-    action = "/product-inquiry-submit.html";
+    action = formAction;
     elements = { fulfillment_interest: new Field(), shipping_zip: new Field() };
     hidden = false;
     querySelector() { return button; }
@@ -70,8 +70,10 @@ test("an in-flight inquiry is sent once and client code excludes the authority f
 });
 
 test("plain static success is insufficient and the loopback preview never posts", async () => {
-  const staticPage = await browser({ accept: new Response("Static response") });
+  const action = "/product-inquiry-submit";
+  const staticPage = await browser({ formAction: action, accept: new Response("Static response") });
   await staticPage.submit();
+  assert.equal(staticPage.posts[0].path, action);
   assert.equal(staticPage.elements["#product-inquiry-success"].hidden, true);
   assert.match(staticPage.elements["#product-inquiry-status"].textContent, /couldn’t confirm/);
   const localPage = await browser({ local: true });

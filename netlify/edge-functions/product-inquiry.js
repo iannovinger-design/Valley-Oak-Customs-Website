@@ -1,7 +1,8 @@
 import catalog from "../../product-inquiry-catalog.json" with { type: "json" };
 
 const formName = "product-inquiry";
-const intakePath = "/product-inquiry-submit.html";
+// Netlify's HTML post-processing can remove .html from the deployed form action.
+const intakePaths = ["/product-inquiry-submit.html", "/product-inquiry-submit"];
 const formContentType = "application/x-www-form-urlencoded";
 const maxBodyBytes = 12_288;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -15,7 +16,7 @@ const clientFields = new Set([
 ]);
 
 export const config = {
-  path: ["/product-inquiry-submit.html", "/product-inquiry", "/product-inquiry.html"],
+  path: [...intakePaths, "/product-inquiry", "/product-inquiry.html"],
   method: "POST",
   onError: "fail",
   rateLimit: { windowLimit: 8, windowSize: 60, aggregateBy: ["ip", "domain"] },
@@ -78,7 +79,7 @@ export function createInquiryEdge({ products = catalog, enabled = privatePreview
   return async (request, context) => {
     const url = new URL(request.url);
     if (request.method !== "POST" || !config.path.includes(url.pathname)) return;
-    if (url.pathname !== intakePath || url.search) return reply(404);
+    if (!intakePaths.includes(url.pathname) || url.search) return reply(404);
     if (!enabled(context)) return reply(403);
     if (request.headers.get("origin") !== url.origin) return reply(403);
     if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== formContentType ||

@@ -21,11 +21,11 @@ const request = (body = valid, { route = path, from = origin, type = "applicatio
     body: typeof body === "string" ? body : new URLSearchParams(body).toString(),
   });
 
-function receiver(downstream = () => new Response("Mock capture", { status: 200 })) {
+function receiver(downstream = () => new Response("Mock capture", { status: 200 }), route = path) {
   const captures = [];
   const context = { ...fixtures, next: async forward => {
     assert.equal(forward.method, "POST");
-    assert.equal(new URL(forward.url).pathname, path);
+    assert.equal(new URL(forward.url).pathname, route);
     assert.equal(forward.headers.get("content-type"), "application/x-www-form-urlencoded");
     assert.equal(forward.headers.get("content-length"), null);
     captures.push(await forward.text());
@@ -71,6 +71,27 @@ test("pickup and undecided delivery need no ZIP; old catalog entries omit a miss
     assert.equal(body.has("shipping_zip"), false);
     assert.equal(body.has("product_id"), false);
   }
+});
+
+test("the post-processed extensionless form action enters the guarded catalog validator", async () => {
+  const route = "/product-inquiry-submit";
+  const { captures, context } = receiver(undefined, route);
+  const handle = testHandler();
+  assert.ok(config.path.includes(route));
+  assert.equal(config.method, "POST");
+  assert.equal((await createInquiryEdge({ products: [product] })(request(valid, { route }), context)).status, 403);
+  assert.equal((await handle(request({ ...valid, sku: "FORGED" }, { route }), context)).status, 400);
+  assert.deepEqual(captures, []);
+
+  const response = await handle(request(valid, { route }), context);
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.get("X-VOC-Inquiry-Forwarded"), "1");
+  assert.equal(captures.length, 1);
+  const body = new URLSearchParams(captures[0]);
+  assert.equal(body.get("sku"), product.sku);
+  assert.equal(body.get("displayed_price"), product.price);
+  assert.equal(body.get("product_id"), product.productId);
+  assert.equal(body.get("questions"), "Customer did not include an additional message.");
 });
 
 test("invalid customer details and forged, stale, or ambiguous product fields never reach capture", async () => {
