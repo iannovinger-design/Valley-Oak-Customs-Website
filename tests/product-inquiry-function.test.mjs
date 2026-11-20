@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { catalogRevision, createProductInquiryHandler, productInquiryLimits } from "../netlify/functions/product-inquiry-core.mjs";
+import { catalogRevision, createProductInquiryHandler, productInquiryLimits } from "../netlify/functions/lib/product-inquiry-core.mjs";
 import { createMemoryInquiryStore } from "./helpers/memory-inquiry-store.mjs";
 
 const product = {

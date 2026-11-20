@@ -30,6 +30,10 @@ async function readWithVersion(store, key) {
   return { data: result.data, etag: result.etag };
 }
 
+async function readJSON(store, key) {
+  return store.get(key, { type: "json", consistency: "strong" });
+}
+
 async function conditionalSet(store, key, value, etag) {
   return store.setJSON(key, value, { onlyIfMatch: etag, metadata: { recordType: "notification-status" } });
 }
@@ -40,8 +44,17 @@ export function createNetlifyBlobInquiryStore(blobStore) {
   const notificationKey = id => `notification-status/${id}.json`;
 
   return {
+    async getInquiry(inquiryId) {
+      return readJSON(blobStore, inquiryKey(inquiryId));
+    },
+
+    async getNotification(inquiryId) {
+      return readJSON(blobStore, notificationKey(inquiryId));
+    },
+
     async createInquiry(record) {
-      const result = await blobStore.setJSON(inquiryKey(record.inquiryId), record, {
+      const key = inquiryKey(record.inquiryId);
+      const result = await blobStore.setJSON(key, record, {
         onlyIfNew: true,
         metadata: {
           recordType: "verified-product-inquiry",
@@ -50,8 +63,14 @@ export function createNetlifyBlobInquiryStore(blobStore) {
           sku: record.product.sku,
         },
       });
-      if (result.modified) return { kind: "created", record };
-      const existing = await blobStore.get(inquiryKey(record.inquiryId), { type: "json", consistency: "strong" });
+      if (result.modified) {
+        const persisted = await readJSON(blobStore, key);
+        if (!persisted || persisted.requestHash !== record.requestHash) {
+          throw new Error("Conditional Blob write was not readable from the expected store");
+        }
+        return { kind: "created", record: persisted };
+      }
+      const existing = await readJSON(blobStore, key);
       if (!existing) throw new Error("Conditional Blob write did not expose the existing inquiry");
       return existing.requestHash === record.requestHash ?
         { kind: "duplicate", record: existing } : { kind: "conflict", record: existing };
@@ -69,11 +88,14 @@ export function createNetlifyBlobInquiryStore(blobStore) {
         lastErrorCode: null,
         activeToken: null,
       };
-      await blobStore.setJSON(notificationKey(inquiryId), initial, {
+      const key = notificationKey(inquiryId);
+      await blobStore.setJSON(key, initial, {
         onlyIfNew: true,
         metadata: { recordType: "notification-status" },
       });
-      return initial;
+      const persisted = await readJSON(blobStore, key);
+      if (!persisted) throw new Error("Notification status was not readable from the expected store");
+      return persisted;
     },
 
     async claimNotification(inquiryId, now, maxAttempts) {

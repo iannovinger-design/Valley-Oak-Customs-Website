@@ -1,6 +1,6 @@
 import catalog from "../../product-inquiry-catalog.json" with { type: "json" };
 import { getDeployStore, getStore } from "@netlify/blobs";
-import { createProductInquiryHandler } from "./product-inquiry-core.mjs";
+import { createProductInquiryHandler } from "./lib/product-inquiry-core.mjs";
 import { createAppsScriptNotifier } from "./lib/apps-script-notifier.mjs";
 import { createNetlifyBlobInquiryStore, selectBlobStore } from "./lib/netlify-blob-inquiry-store.mjs";
 

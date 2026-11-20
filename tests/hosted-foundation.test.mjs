@@ -1,10 +1,16 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import test from "node:test";
-import { catalogRevision } from "../netlify/functions/product-inquiry-core.mjs";
+import { catalogRevision } from "../netlify/functions/lib/product-inquiry-core.mjs";
 
 const read = path => readFile(new URL("../" + path, import.meta.url), "utf8");
+
+test("only the Product Inquiry entry is packaged as a Netlify Function", async () => {
+  const entries = await readdir(new URL("../netlify/functions/", import.meta.url), { withFileTypes: true });
+  assert.deepEqual(entries.filter(entry => entry.isFile()).map(entry => entry.name).sort(), ["product-inquiry.mjs"]);
+  assert.equal(await stat(new URL("../netlify/functions/lib/product-inquiry-core.mjs", import.meta.url)).then(() => true), true);
+});
 
 test("the isolated prototype preserves the Bells listing, page and approved photograph", async () => {
   const [home, page, catalogText, photo] = await Promise.all([

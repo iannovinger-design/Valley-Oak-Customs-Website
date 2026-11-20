@@ -7,6 +7,10 @@ import {
 class FakeBlobStore {
   entries = new Map();
   sequence = 0;
+  getCalls = [];
+  constructor({ hideReads = false } = {}) {
+    this.hideReads = hideReads;
+  }
   async setJSON(key, value, options = {}) {
     const current = this.entries.get(key);
     if (options.onlyIfNew && current) return { modified: false };
@@ -16,8 +20,14 @@ class FakeBlobStore {
     this.entries.set(key, { data: structuredClone(value), etag, metadata: structuredClone(options.metadata ?? {}) });
     return { modified: true, etag };
   }
-  async get(key) { return structuredClone(this.entries.get(key)?.data ?? null); }
-  async getWithMetadata(key) {
+  async get(key, options = {}) {
+    this.getCalls.push({ method: "get", key, options: structuredClone(options) });
+    if (this.hideReads) return null;
+    return structuredClone(this.entries.get(key)?.data ?? null);
+  }
+  async getWithMetadata(key, options = {}) {
+    this.getCalls.push({ method: "getWithMetadata", key, options: structuredClone(options) });
+    if (this.hideReads) return null;
     const value = this.entries.get(key);
     return value ? structuredClone(value) : null;
   }
@@ -56,6 +66,20 @@ test("conditional writes suppress exact duplicates and reject UUID reuse", async
   assert.equal((await store.createInquiry(record)).kind, "duplicate");
   assert.equal((await store.createInquiry({ ...record, requestHash: "c".repeat(64) })).kind, "conflict");
   assert.equal([...blob.entries.keys()].filter(key => key.startsWith("inquiries/")).length, 1);
+  assert.deepEqual(await store.getInquiry(record.inquiryId), record);
+  assert.ok(blob.getCalls.every(call => call.options.consistency === "strong" && call.options.type === "json"));
+});
+
+test("a successful conditional write is not accepted until exact strong read-back succeeds", async () => {
+  const blob = new FakeBlobStore({ hideReads: true });
+  const store = createNetlifyBlobInquiryStore(blob);
+  await assert.rejects(store.createInquiry(record), /not readable from the expected store/);
+  assert.equal(blob.entries.has(`inquiries/${record.inquiryId}.json`), true);
+  assert.deepEqual(blob.getCalls, [{
+    method: "get",
+    key: `inquiries/${record.inquiryId}.json`,
+    options: { type: "json", consistency: "strong" },
+  }]);
 });
 
 test("concurrent notification claims have one winner and never mutate the inquiry", async () => {
@@ -77,6 +101,7 @@ test("concurrent notification claims have one winner and never mutate the inquir
   const status = await blob.get(`notification-status/${record.inquiryId}.json`);
   assert.equal(status.status, "sent");
   assert.equal(status.attempts, 1);
+  assert.deepEqual(await store.getNotification(record.inquiryId), status);
 });
 
 test("failed claims are bounded and stale sending claims can recover", async () => {
