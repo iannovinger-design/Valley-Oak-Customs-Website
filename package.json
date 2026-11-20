@@ -1,0 +1,14 @@
+{
+  "name": "valley-oak-customs-website",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "dependencies": {
+    "@netlify/blobs": "11.1.9"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

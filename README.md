@@ -2,6 +2,8 @@
 
 Canonical static source for `valleyoakcustoms.com`, ready for Git-managed Netlify deployment.
 
+The isolated Phase 6.9 branch includes a dedicated Product Inquiry Function and Netlify Blobs prototype. Product Inquiry is not a Native Netlify Form on this branch. Quote Request and Monogram Quote remain unchanged. See `PRODUCT-INQUIRY-PROTOTYPE.md` and `PRODUCT-INQUIRY-OWNER-OPERATIONS.md`.
+
 ## Files
 
 - `index.html` is the public website.

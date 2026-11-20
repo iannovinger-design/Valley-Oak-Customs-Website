@@ -1,30 +1,42 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { webcrypto } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import test from "node:test";
 import vm from "node:vm";
 
 const source = await readFile(new URL("../script.js", import.meta.url), "utf8");
+const inquiryId = "11111111-1111-4111-8111-111111111111";
+const product = {
+  slug: "bells-christmas-ornament-voc-ot-008", productId: "332188eb-35d9-4486-a022-010f7ebde880",
+  title: "Wooden Christmas Ornament – Bells", price: "10.00", sku: "VOC-OT-008", quantity: 2,
+};
 
-async function browser({ local = false, accept, hold, formAction = "/product-inquiry-submit.html" } = {}) {
+async function browser({ local = false, reply, hold } = {}) {
   class Field {
     value = "";
     disabled = false;
+    required = false;
     hidden = true;
+    textContent = "";
+    href = "";
     listeners = {};
     classList = { add() {}, remove() {} };
     addEventListener(name, callback) { this.listeners[name] = callback; }
   }
-  const fields = new Map([
-    ["bot-field", ""], ["customer_name", "Taylor Example"], ["email", "taylor@example.invalid"],
-    ["fulfillment_interest", "Local pickup"], ["questions", ""], ["sku", "forged"], ["displayed_price", "0.01"],
+  const values = new Map([
+    ["website", ""], ["customer_name", "Taylor Example"], ["email", "taylor@example.invalid"],
+    ["fulfillment_interest", "Local pickup"], ["shipping_zip", ""], ["questions", ""],
+    ["sku", "FORGED"], ["displayed_price", "0.01"],
   ]);
   const button = new Field();
+  button.disabled = true;
   const elements = Object.fromEntries([
-    "#product-inquiry-success", "#product-inquiry-status", "#inquiry-product-display", "#inquiry-price-display",
-    "#inquiry-product-link", "#inquiry-shipping-zip-field", "#local-form-note",
+    "#product-inquiry-success", "#product-inquiry-status", "#product-inquiry-reference",
+    "#inquiry-product-display", "#inquiry-price-display", "#inquiry-product-link",
+    "#inquiry-shipping-zip-field", "#local-form-note",
   ].map(name => [name, new Field()]));
   class HTMLFormElement extends Field {
-    action = formAction;
+    action = "/api/product-inquiry";
     elements = { fulfillment_interest: new Field(), shipping_zip: new Field() };
     hidden = false;
     querySelector() { return button; }
@@ -33,51 +45,64 @@ async function browser({ local = false, accept, hold, formAction = "/product-inq
   form.elements.fulfillment_interest.value = "Local pickup";
   const posts = [];
   const fetch = async (path, init) => {
-    if (path === "/product-inquiry-catalog.json") return Response.json([
-      { slug: "bells", title: "Wooden Christmas Ornament – Bells", price: "10.00", sku: "VOC-OT-008" },
-    ]);
+    if (path === "/product-inquiry-catalog.json") return Response.json([product]);
     posts.push({ path, ...init });
     if (hold) await hold;
-    return accept ?? new Response(null, { status: 204, headers: { "X-VOC-Inquiry-Forwarded": "1" } });
+    const body = JSON.parse(init.body);
+    return reply ? reply(body) : Response.json({ accepted: true, inquiryId, notification: "sent" }, { status: 201 });
   };
-  class FormData { has(key) { return fields.has(key); } get(key) { return fields.get(key); } }
+  class FormData { get(key) { return values.get(key) ?? null; } }
+  const crypto = { subtle: webcrypto.subtle, randomUUID: () => inquiryId };
   vm.runInNewContext(source, {
-    HTMLFormElement, FormData, URLSearchParams, fetch,
-    window: { location: { search: "?slug=bells&sku=incorrect", hostname: local ? "127.0.0.1" : "preview.example.invalid" } },
+    HTMLFormElement, FormData, URLSearchParams, fetch, crypto, TextEncoder, Uint8Array, Response, JSON, String,
+    window: { location: { search: `?slug=${product.slug}`, hostname: local ? "127.0.0.1" : "preview.example.invalid" } },
     document: { querySelector: name => name === "#product-inquiry-form" ? form : elements[name] ?? null, querySelectorAll: () => [] },
   });
-  await new Promise(resolve => setImmediate(resolve));
+  for (let attempt = 0; attempt < 50 && button.disabled; attempt += 1) {
+    await new Promise(resolve => setImmediate(resolve));
+  }
+  assert.equal(button.disabled, false, "catalog loading did not enable the Product Inquiry form");
   return { form, posts, elements, submit: () => form.listeners.submit({ preventDefault() {} }) };
 }
 
-test("an in-flight inquiry is sent once and client code excludes the authority fields", async () => {
+test("the client sends one minimal JSON request and displays the durable reference", async () => {
   let release;
   const page = await browser({ hold: new Promise(resolve => { release = resolve; }) });
   const first = page.submit();
   await page.submit();
   assert.equal(page.posts.length, 1);
-  assert.equal(page.posts[0].path, "/product-inquiry-submit.html");
-  assert.equal(page.posts[0].redirect, "error");
-  assert.deepEqual(Object.fromEntries(page.posts[0].body), {
-    "form-name": "product-inquiry", product_slug: "bells", expected_price: "10.00",
-    "bot-field": "", customer_name: "Taylor Example", email: "taylor@example.invalid",
-    fulfillment_interest: "Local pickup", questions: "",
-  });
-  assert.equal(page.elements["#product-inquiry-success"].hidden, true);
+  assert.equal(page.posts[0].path, "/api/product-inquiry");
+  assert.equal(page.posts[0].headers["Content-Type"], "application/json");
+  const body = JSON.parse(page.posts[0].body);
+  assert.deepEqual(Object.keys(body).sort(), [
+    "catalogRevision", "customerName", "email", "fulfillment", "message",
+    "productId", "shippingZip", "submissionId", "website",
+  ]);
+  assert.equal(body.productId, product.productId);
+  assert.match(body.catalogRevision, /^[0-9a-f]{64}$/);
+  assert.equal(body.sku, undefined);
+  assert.equal(body.price, undefined);
   release();
   await first;
   assert.equal(page.elements["#product-inquiry-success"].hidden, false);
+  assert.equal(page.elements["#product-inquiry-reference"].textContent, `Inquiry reference: ${inquiryId}`);
 });
 
-test("plain static success is insufficient and the loopback preview never posts", async () => {
-  const action = "/product-inquiry-submit";
-  const staticPage = await browser({ formAction: action, accept: new Response("Static response") });
-  await staticPage.submit();
-  assert.equal(staticPage.posts[0].path, action);
-  assert.equal(staticPage.elements["#product-inquiry-success"].hidden, true);
-  assert.match(staticPage.elements["#product-inquiry-status"].textContent, /couldn’t confirm/);
-  const localPage = await browser({ local: true });
-  await localPage.submit();
-  assert.equal(localPage.posts.length, 0);
-  assert.match(localPage.elements["#product-inquiry-status"].textContent, /Local preview/);
+test("stale catalog and generic failures remain customer-safe", async () => {
+  const stale = await browser({ reply: body => Response.json({ accepted: false, code: "stale_catalog" }, { status: 409 }) });
+  await stale.submit();
+  assert.match(stale.elements["#product-inquiry-status"].textContent, /product changed/i);
+  assert.equal(stale.elements["#product-inquiry-success"].hidden, true);
+
+  const failure = await browser({ reply: body => Response.json({ accepted: false, code: "storage_unavailable" }, { status: 503 }) });
+  await failure.submit();
+  assert.match(failure.elements["#product-inquiry-status"].textContent, /couldn’t confirm/i);
+  assert.doesNotMatch(failure.elements["#product-inquiry-status"].textContent, /stack|path|blob/i);
+});
+
+test("loopback previews never submit customer information", async () => {
+  const page = await browser({ local: true });
+  await page.submit();
+  assert.equal(page.posts.length, 0);
+  assert.match(page.elements["#product-inquiry-status"].textContent, /Local preview/);
 });

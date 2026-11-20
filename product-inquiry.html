@@ -33,14 +33,8 @@
             <a class="text-link" id="inquiry-product-link" href="/#available">Back to Available Now</a>
           </div>
 
-          <form id="product-inquiry-form" class="product-inquiry-form" name="product-inquiry" method="POST" action="/product-inquiry-submit.html" data-netlify="true" netlify-honeypot="bot-field">
-            <p class="form-honeypot" hidden><label>Do not fill this out: <input name="bot-field"></label></p>
-            <input type="hidden" name="product_slug">
-            <input type="hidden" name="product_name">
-            <input type="hidden" name="sku">
-            <input type="hidden" name="product_id">
-            <input type="hidden" name="displayed_price">
-            <input type="hidden" name="product_page">
+          <form id="product-inquiry-form" class="product-inquiry-form" action="/api/product-inquiry">
+            <p class="form-honeypot" hidden><label>Do not fill this out: <input name="website" tabindex="-1" autocomplete="off"></label></p>
             <div class="form-grid">
               <label>Name <input name="customer_name" maxlength="100" autocomplete="name" required></label>
               <label>Email <input type="email" name="email" maxlength="254" autocomplete="email" required></label>
@@ -62,6 +56,7 @@
             <p class="eyebrow">Product Inquiry Sent</p>
             <h2 id="product-inquiry-success-heading">Thanks. I got your product inquiry.</h2>
             <p>I will review the details and follow up before any order, payment, or shipping arrangements are made.</p>
+            <p id="product-inquiry-reference"></p>
             <a class="button primary" href="/">Return to Valley Oak Customs</a>
           </section>
         </div>
