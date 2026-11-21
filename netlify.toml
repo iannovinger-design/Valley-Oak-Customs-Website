@@ -30,6 +30,11 @@
     Cache-Control = "public, max-age=300, must-revalidate"
 
 [[redirects]]
+  from = "/products/plasma-cut-steel-wall-art-featuring-a-classic-chevy-squarebody-pickup-voc-fl-002"
+  to = "/products/plasma-cut-steel-wall-art-featuring-a-classic-chevy-squarebody-pickup-voc-fl-002.html"
+  status = 200
+
+[[redirects]]
   from = "/product-inquiry"
   to = "/product-inquiry.html"
   status = 200
