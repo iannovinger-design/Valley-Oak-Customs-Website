@@ -1,4 +1,5 @@
-import { cp, mkdir, readdir, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -29,5 +30,20 @@ for (const file of [...files, "assets", ...(productPages.length ? ["products"] :
 if (process.env.NETLIFY === "true" && process.env.CONTEXT === "production") {
   const commit = process.env.COMMIT_REF;
   if (!/^[a-f0-9]{40}$/.test(commit ?? "")) throw new Error("A Netlify production build commit is required.");
-  await writeFile(path.join(output, "website-build.json"), JSON.stringify({ commit, context: "production" }) + "\n", { flag: "wx" });
+  const photos = await readdir(path.join(output, "assets", "products"), { withFileTypes: true })
+    .catch(error => {
+      if (error.code === "ENOENT") return [];
+      throw error;
+    });
+  if (photos.some(entry => !entry.isFile() || !/^[a-z0-9-]+\.(?:png|jpe?g|webp)$/.test(entry.name)))
+    throw new Error("Unexpected entry in public product photos.");
+  const listingFiles = ["index.html", "product-inquiry-catalog.json", "sitemap.xml",
+    ...productPages.map(entry => "products/" + entry.name),
+    ...photos.map(entry => "assets/products/" + entry.name)];
+  const digests = await Promise.all(listingFiles.sort().map(async file => {
+    const bytes = await readFile(path.join(output, file));
+    return [file, createHash("sha256").update(bytes).digest("hex")];
+  }));
+  const marker = { commit, context: "production", files: Object.fromEntries(digests) };
+  await writeFile(path.join(output, "website-build.json"), JSON.stringify(marker) + "\n", { flag: "wx" });
 }

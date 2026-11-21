@@ -1,10 +1,41 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFile, readdir, stat } from "node:fs/promises";
+import { cp, mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 import { catalogRevision } from "../netlify/functions/lib/product-inquiry-core.mjs";
 
 const read = path => readFile(new URL("../" + path, import.meta.url), "utf8");
+
+test("production staging hashes public listing files and excludes the marker from previews", async t => {
+  const fixture = await mkdtemp(path.join(tmpdir(), "voc-public-stage-"));
+  t.after(() => rm(fixture, { recursive: true, force: true }));
+  const files = await readdir(new URL("../", import.meta.url));
+  const stages = files.filter(name => /\.(?:html|ico|json|js|txt|css|xml)$/.test(name) && !name.startsWith("package"));
+  for (const name of [...stages, "tools", "products", "assets"]) {
+    await cp(new URL("../" + name, import.meta.url), path.join(fixture, name), { recursive: true });
+  }
+  const build = context => execFileSync(process.execPath, ["tools/stage-public.mjs"], {
+    cwd: fixture, env: { ...process.env, NETLIFY: "true", CONTEXT: context, COMMIT_REF: "f".repeat(40),
+      VOC_TEST_NOT_PUBLIC: "private fixture value" },
+  });
+  const output = path.join(fixture, ".public-site");
+  const markerFile = path.join(output, "website-build.json");
+  build("production");
+  const marker = JSON.parse(await readFile(markerFile, "utf8"));
+  const listingFiles = ["index.html", "product-inquiry-catalog.json", "sitemap.xml",
+    "products/bells-christmas-ornament-voc-ot-008.html",
+    "assets/products/bells-christmas-ornament-voc-ot-008-4f7731553369.png"];
+  const hashes = await Promise.all(listingFiles.map(async file => [
+    file, createHash("sha256").update(await readFile(path.join(output, file))).digest("hex"),
+  ]));
+  assert.deepEqual(marker, { commit: "f".repeat(40), context: "production", files: Object.fromEntries(hashes) });
+  await rm(output, { recursive: true });
+  build("deploy-preview");
+  await assert.rejects(stat(markerFile), { code: "ENOENT" });
+});
 
 test("only the Product Inquiry entry is packaged as a Netlify Function", async () => {
   const entries = await readdir(new URL("../netlify/functions/", import.meta.url), { withFileTypes: true });
