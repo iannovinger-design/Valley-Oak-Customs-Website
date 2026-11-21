@@ -2,7 +2,7 @@
 
 Canonical static source for `valleyoakcustoms.com`, ready for Git-managed Netlify deployment.
 
-The isolated Phase 6.9 branch includes a dedicated Product Inquiry Function and Netlify Blobs prototype. Product Inquiry is not a Native Netlify Form on this branch. Quote Request and Monogram Quote remain unchanged. See `PRODUCT-INQUIRY-PROTOTYPE.md` and `PRODUCT-INQUIRY-OWNER-OPERATIONS.md`.
+The Phase 7 release candidate includes the dedicated Product Inquiry Function and Netlify Blobs. Quote Request and Monogram Quote retain their native Netlify Forms. See `PRODUCT-INQUIRY-PROTOTYPE.md` and `PRODUCT-INQUIRY-OWNER-OPERATIONS.md`.
 
 ## Files
 
@@ -13,12 +13,12 @@ The isolated Phase 6.9 branch includes a dedicated Product Inquiry Function and 
 - `thanks.html` is the quote form success page.
 - `inventory.html` is the reserved private inventory page.
 - `assets/shop-hero.jpg` is the temporary website artwork. `assets/shop-hero.png` is kept as the higher-quality source.
-- `netlify.toml` tells Netlify to publish this folder as-is.
+- `netlify.toml` runs the static staging script and publishes `.public-site`. The Function is bundled separately. Tests, documentation, and Apps Script sources stay outside the static deploy.
 
 ## Netlify Setup
 
 1. Connect the existing Valley Oak Customs Netlify project to this repository.
-2. Use `main` as the production branch, no build command, and `.` as the publish directory.
+2. Use `main` as the production branch and the build command and publish directory in `netlify.toml`.
 3. After deploy, Netlify should detect the `quote-request` form automatically.
 4. In Netlify, add the custom domain `valleyoakcustoms.com`.
 5. Because Wix manages DNS, update the Wix DNS records using the exact records Netlify gives you.

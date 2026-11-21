@@ -19,10 +19,11 @@ The Dashboard product association is `product.dashboardProductId`. This is the d
 
 In the same Blob store, open `notification-status/<inquiry-id>.json`.
 
-- `sent` — Apps Script accepted the message and the sent-ID ledger was updated.
+- `sent` — Apps Script acknowledged the matching inquiry and the Function confirmed the conditional status write.
 - `failed` — the canonical inquiry remains safe, but Gmail delivery needs attention.
+- `unknown` — receipt or its status update could not be confirmed. Check Gmail by inquiry reference before considering any manual follow-up.
 - `pending` or `sending` — delivery has not completed or a prior attempt stopped unexpectedly.
-- `attempts` — number of claimed delivery cycles, capped at three.
+- `attempts` — number of claimed delivery cycles, capped at one in this release candidate.
 - `lastErrorCode` — a short operational code, never a stack trace or secret.
 
 ## Recover when Gmail fails
@@ -33,7 +34,7 @@ The business-safe recovery requires no code editor:
 2. Use the stored customer email address to compose a normal Gmail reply.
 3. Include the inquiry ID in the subject or notes so it remains traceable.
 
-An owner-facing **Retry notification** button is not implemented. Immediate automated retry after the three-attempt bound currently requires developer tooling and is unfinished functionality. Do not describe the prototype as fully owner-ready until that control exists.
+An owner-facing **Retry notification** button is not implemented. Recovery from a failed notification uses the saved inquiry and normal Gmail. Automated notification recovery is outside this release candidate.
 
 ## Retention and backups
 
