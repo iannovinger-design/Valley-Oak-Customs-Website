@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createAppsScriptNotifier } from "../netlify/functions/lib/apps-script-notifier.mjs";
 import { catalogRevision, createProductInquiryHandler, productInquiryLimits } from "../netlify/functions/lib/product-inquiry-core.mjs";
 import { createMemoryInquiryStore } from "./helpers/memory-inquiry-store.mjs";
 
@@ -36,13 +37,14 @@ const request = (body = valid, options = {}) => new Request(origin + "/api/produ
 });
 const quiet = { error() {} };
 
-function fixture({ store = createMemoryInquiryStore(), notifier } = {}) {
+function fixture({ store = createMemoryInquiryStore(), notifier, maxNotificationAttempts } = {}) {
   const sent = [];
   const transport = notifier ?? { async send(record) { sent.push(structuredClone(record)); } };
   const handler = createProductInquiryHandler({
     products,
     store,
     notifier: transport,
+    maxNotificationAttempts,
     clock: () => new Date("2026-11-20T18:30:00.000Z"),
     logger: quiet,
   });
@@ -175,4 +177,52 @@ test("notification-status failure never removes the canonical inquiry", async ()
   assert.equal((await response.json()).notification, "unknown");
   assert.equal(store.inquiries.size, 1);
   assert.equal(f.sent.length, 0);
+});
+
+test("a single-attempt inquiry stores ambiguous delivery and never resends on UUID replay", async () => {
+  let calls = 0;
+  const notifier = createAppsScriptNotifier({
+    endpoint: "https://script.google.com/macros/s/synthetic/exec",
+    secret: "synthetic-test-secret-at-least-32-characters",
+    maxAttempts: 1,
+    fetchImpl: async () => {
+      calls += 1;
+      throw new DOMException("Synthetic timeout", "TimeoutError");
+    },
+  });
+  const f = fixture({ notifier, maxNotificationAttempts: 1 });
+  for (const duplicate of [false, true]) {
+    const response = await f.handler(request());
+    assert.equal(response.status, 202);
+    assert.deepEqual(await response.json(), {
+      accepted: true, inquiryId: id, duplicate, notification: "unknown", message: "Your inquiry was received.",
+    });
+  }
+  assert.equal(calls, 1);
+  assert.equal(f.store.inquiries.size, 1);
+  assert.equal(f.store.notifications.get(id).status, "unknown");
+  assert.equal(f.store.notifications.get(id).lastErrorCode, "delivery_unconfirmed");
+  assert.equal(f.store.notifications.get(id).attempts, 1);
+  assert.equal(f.store.notifications.get(id).sentAt, null);
+});
+
+test("a positive notifier acknowledgement cannot publish sent without a confirmed status update", async () => {
+  for (const finish of [async () => false, async () => { throw new Error("Synthetic write timeout"); }]) {
+    const store = createMemoryInquiryStore();
+    const writes = [];
+    store.finishNotification = async (inquiryId, token, outcome) => {
+      writes.push({ inquiryId, token, outcome });
+      return finish();
+    };
+    const f = fixture({ store, maxNotificationAttempts: 1 });
+    for (let replay = 0; replay < 2; replay += 1) {
+      const response = await f.handler(request());
+      assert.equal(response.status, 202);
+      assert.equal((await response.json()).notification, replay === 0 ? "unknown" : "pending");
+    }
+    assert.deepEqual(writes, [{ inquiryId: id, token: "claim-1", outcome: "sent" }]);
+    assert.equal(f.sent.length, 1);
+    assert.equal(store.inquiries.size, 1);
+    assert.equal(store.notifications.get(id).status, "sending");
+  }
 });

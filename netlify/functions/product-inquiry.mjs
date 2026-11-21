@@ -25,7 +25,7 @@ function runtimeNotifier() {
   const endpoint = env("PRODUCT_INQUIRY_APPS_SCRIPT_URL");
   const secret = env("PRODUCT_INQUIRY_HMAC_SECRET");
   if (!endpoint || !secret) return unavailableNotifier();
-  return createAppsScriptNotifier({ endpoint, secret, maxAttempts: 2 });
+  return createAppsScriptNotifier({ endpoint, secret, maxAttempts: 1 });
 }
 
 function safeFailure() {
@@ -40,7 +40,9 @@ export default async function productInquiry(request, context) {
   try {
     const selected = selectBlobStore(context, { getStore, getDeployStore });
     const store = createNetlifyBlobInquiryStore(selected.store);
-    return await createProductInquiryHandler({ products: catalog, store, notifier: runtimeNotifier() })(request);
+    return await createProductInquiryHandler({
+      products: catalog, store, notifier: runtimeNotifier(), maxNotificationAttempts: 1,
+    })(request);
   } catch {
     console.error("product_inquiry_runtime_unavailable");
     return safeFailure();

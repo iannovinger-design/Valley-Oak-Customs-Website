@@ -23,7 +23,7 @@ export function createMemoryInquiryStore({ failCreate = false, failStatus = fals
     async claimNotification(id, now, maxAttempts) {
       if (this.failStatus) throw new Error("synthetic status failure");
       const state = notifications.get(id);
-      if (state.status === "sent") return { claimed: false, status: "sent" };
+      if (["sent", "unknown"].includes(state.status)) return { claimed: false, status: state.status };
       if (state.status === "sending") return { claimed: false, status: "pending" };
       if (state.attempts >= maxAttempts) return { claimed: false, status: "failed" };
       const token = `claim-${state.attempts + 1}`;

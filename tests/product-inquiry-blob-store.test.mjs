@@ -132,3 +132,23 @@ test("failed claims are bounded and stale sending claims can recover", async () 
   const exhausted = await store.claimNotification(record.inquiryId, new Date(start.getTime() + 1_000_000), 3);
   assert.deepEqual(exhausted, { claimed: false, status: "failed" });
 });
+
+test("one-cycle delivery treats unknown and expired claims as unconfirmed without reclaiming", async () => {
+  const start = new Date("2026-11-20T18:30:00.000Z");
+  const later = new Date(start.getTime() + 301_000);
+  for (const persistUnknown of [false, true]) {
+    const store = createNetlifyBlobInquiryStore(new FakeBlobStore());
+    await store.ensureNotification(record.inquiryId, start);
+    const claim = await store.claimNotification(record.inquiryId, start, 1);
+    assert.equal(claim.claimed, true);
+    assert.equal(await store.finishNotification(record.inquiryId, "wrong-token", "sent", start), false);
+    if (persistUnknown) {
+      assert.equal(await store.finishNotification(record.inquiryId, claim.token, "unknown", start, "delivery_unconfirmed"), true);
+    }
+    assert.deepEqual(await store.claimNotification(record.inquiryId, later, 1), { claimed: false, status: "unknown" });
+    const state = await store.getNotification(record.inquiryId);
+    assert.equal(state.attempts, 1);
+    assert.equal(state.status, persistUnknown ? "unknown" : "sending");
+    assert.equal(state.sentAt, null);
+  }
+});

@@ -22,8 +22,8 @@ Production uses the site-wide `verified-product-inquiries` store. Deploy Preview
 3. Resolve canonical product data from the bundled catalog and reject unavailable products.
 4. Atomically create the immutable inquiry. An exact UUID replay returns the existing record; reuse with different content returns `409 submission_conflict`.
 5. Create or recover the notification-status record and conditionally claim one delivery attempt.
-6. Send a signed Apps Script request, with at most two network attempts in that cycle and at most three claimed cycles in Blob state.
-7. Record `sent` or `failed`. Notification failure returns an accepted `202`; it never deletes the inquiry.
+6. Send one signed Apps Script POST at most, with a single claimed notification cycle per inquiry UUID in the test fixture.
+7. Report `sent` only after a matching acknowledgement and a successful conditional Blob update. Ambiguous delivery or status writes return an accepted `202` with `notification: "unknown"`. The inquiry remains recoverable.
 
 Customer success is shown only when the response contains `accepted: true` and the exact UUID generated for that form. The success panel displays the inquiry reference.
 
@@ -33,6 +33,7 @@ Customer success is shown only when the response contains `accepted: true` and t
 - If the inquiry is stored but notification state or Gmail delivery fails, the response is `202` with the durable inquiry ID. The customer sees success because the business record exists.
 - Canonical records and notification status use separate keys, so notification updates cannot rewrite product or customer details.
 - Apps Script uses HMAC, a five-minute timestamp window, `LockService`, and a sent-ID property.
+- The controlled Gmail test does not retry. If the delivery outcome is unclear, check the owner's Gmail and the stored inquiry by UUID before considering any manual recovery. Phase 6.15 did not execute a hosted same-UUID replay through the protected browser form.
 - Exactly-once email cannot be guaranteed. Gmail may accept a message immediately before Apps Script fails to record the sent ID. A retry can then send a duplicate. Every message includes the inquiry ID so the duplicate is recognizable.
 - Deploy-specific Preview Blobs follow Netlify's deploy lifecycle and are test evidence, not a durable backup. Only the production site-wide store is the long-lived business record design.
 - The Apps Script sent-ID ledger and MailApp are quota-bounded. The current consumer-account limits include 500 KB total Script Properties storage and 100 email recipients per day. These limits can change and must be checked before production approval; the ledger needs an archive/rollover plan before it approaches capacity.

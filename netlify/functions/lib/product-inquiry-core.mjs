@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { NotificationDeliveryUnknownError } from "./apps-script-notifier.mjs";
 
 const MAX_BODY_BYTES = 12_288;
 const MESSAGE_LIMIT = 2_000;
@@ -172,7 +173,9 @@ function errorStatus(code) {
   return ["stale_catalog", "product_unavailable"].includes(code) ? 409 : 400;
 }
 
-export function createProductInquiryHandler({ products, store, notifier, clock = () => new Date(), logger = console } = {}) {
+export function createProductInquiryHandler({
+  products, store, notifier, maxNotificationAttempts = 3, clock = () => new Date(), logger = console,
+} = {}) {
   const catalog = prepareCatalog(products);
   if (!store || typeof store.createInquiry !== "function") throw new Error("Inquiry store is required");
   if (!notifier || typeof notifier.send !== "function") throw new Error("Inquiry notifier is required");
@@ -215,17 +218,20 @@ export function createProductInquiryHandler({ products, store, notifier, clock =
     let notification = "pending";
     try {
       await store.ensureNotification(record.inquiryId, now);
-      const claim = await store.claimNotification(record.inquiryId, now, 3);
+      const claim = await store.claimNotification(record.inquiryId, now, maxNotificationAttempts);
       if (claim.claimed) {
+        let outcome = "sent";
+        let errorCode = null;
         try {
           await notifier.send(stored.record ?? record);
-          await store.finishNotification(record.inquiryId, claim.token, "sent", clock());
-          notification = "sent";
         } catch (error) {
-          await store.finishNotification(record.inquiryId, claim.token, "failed", clock(), "delivery_failed").catch(() => {});
-          logger.error?.("product_inquiry_notification_failed", { inquiryId: record.inquiryId });
-          notification = "failed";
+          outcome = error instanceof NotificationDeliveryUnknownError ? "unknown" : "failed";
+          errorCode = outcome === "unknown" ? "delivery_unconfirmed" : "delivery_failed";
+          logger.error?.("product_inquiry_notification_failed", { inquiryId: record.inquiryId, errorCode });
         }
+        const updated = await store.finishNotification(record.inquiryId, claim.token, outcome, clock(), errorCode);
+        notification = updated ? outcome : "unknown";
+        if (!updated) logger.error?.("product_inquiry_notification_claim_lost", { inquiryId: record.inquiryId });
       } else {
         notification = claim.status;
       }

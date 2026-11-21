@@ -104,12 +104,14 @@ export function createNetlifyBlobInquiryStore(blobStore) {
         const current = await readWithVersion(blobStore, key);
         if (!current) throw new Error("Missing notification status");
         const state = current.data;
-        if (state.status === "sent") return { claimed: false, status: "sent" };
+        if (["sent", "unknown"].includes(state.status)) return { claimed: false, status: state.status };
         const sendingSince = state.status === "sending" && state.lastAttemptAt ? Date.parse(state.lastAttemptAt) : NaN;
         if (state.status === "sending" && Number.isFinite(sendingSince) && now.getTime() - sendingSince < 300_000) {
           return { claimed: false, status: "pending" };
         }
-        if (state.attempts >= maxAttempts) return { claimed: false, status: "failed" };
+        if (state.attempts >= maxAttempts) {
+          return { claimed: false, status: state.status === "sending" ? "unknown" : "failed" };
+        }
         const token = randomUUID();
         const next = {
           ...state,
@@ -126,7 +128,7 @@ export function createNetlifyBlobInquiryStore(blobStore) {
     },
 
     async finishNotification(inquiryId, token, outcome, now, errorCode = null) {
-      if (!new Set(["sent", "failed"]).has(outcome)) throw new Error("Invalid notification outcome");
+      if (!["sent", "failed", "unknown"].includes(outcome)) throw new Error("Invalid notification outcome");
       const key = notificationKey(inquiryId);
       for (let retry = 0; retry < 5; retry += 1) {
         const current = await readWithVersion(blobStore, key);
@@ -136,7 +138,7 @@ export function createNetlifyBlobInquiryStore(blobStore) {
           ...current.data,
           status: outcome,
           sentAt: outcome === "sent" ? now.toISOString() : current.data.sentAt,
-          lastErrorCode: outcome === "failed" ? errorCode : null,
+        lastErrorCode: errorCode,
           activeToken: null,
         };
         const result = await conditionalSet(blobStore, key, next, current.etag);

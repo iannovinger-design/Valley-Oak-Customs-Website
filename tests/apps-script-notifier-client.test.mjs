@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import test from "node:test";
-import { createAppsScriptNotifier, notificationPayload, signNotification } from "../netlify/functions/lib/apps-script-notifier.mjs";
+import { createAppsScriptNotifier, notificationPayload, NotificationDeliveryUnknownError, signNotification } from "../netlify/functions/lib/apps-script-notifier.mjs";
 
 const record = {
   inquiryId: "11111111-1111-4111-8111-111111111111",
@@ -55,4 +55,17 @@ test("the notifier stops after the configured attempts and validates configurati
   assert.equal(calls, 2);
   assert.throws(() => createAppsScriptNotifier({ endpoint: "http://invalid", secret }), /endpoint/);
   assert.throws(() => createAppsScriptNotifier({ endpoint, secret: "short" }), /secret/);
+});
+
+test("a positive response for a different inquiry is unconfirmed and never retried by default", async () => {
+  let calls = 0;
+  const notifier = createAppsScriptNotifier({
+    endpoint, secret,
+    fetchImpl: async () => {
+      calls += 1;
+      return Response.json({ ok: true, inquiryId: "22222222-2222-4222-8222-222222222222" });
+    },
+  });
+  await assert.rejects(notifier.send(record), NotificationDeliveryUnknownError);
+  assert.equal(calls, 1);
 });

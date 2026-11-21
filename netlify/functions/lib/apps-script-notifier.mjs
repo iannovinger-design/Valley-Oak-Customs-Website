@@ -22,7 +22,9 @@ export function signNotification({ timestamp, payload, secret }) {
   return { version: 1, timestamp, payload: encodedPayload, signature };
 }
 
-export function createAppsScriptNotifier({ endpoint, secret, fetchImpl = fetch, clock = () => new Date(), maxAttempts = 2 } = {}) {
+export class NotificationDeliveryUnknownError extends Error {}
+
+export function createAppsScriptNotifier({ endpoint, secret, fetchImpl = fetch, clock = () => new Date(), maxAttempts = 1 } = {}) {
   if (!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(endpoint ?? "")) {
     throw new Error("Apps Script notifier endpoint is not configured");
   }
@@ -51,7 +53,7 @@ export function createAppsScriptNotifier({ endpoint, secret, fetchImpl = fetch, 
           lastError = new Error("Notifier request failed");
         }
       }
-      throw lastError ?? new Error("Notifier request failed");
+      throw new NotificationDeliveryUnknownError(lastError.message);
     },
   };
 }
