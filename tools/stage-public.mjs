@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir } from "node:fs/promises";
+import { cp, mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -25,4 +25,9 @@ if (productPages.some(entry => !entry.isFile() || !/^[a-z0-9]+(?:-[a-z0-9]+)*\.h
 await mkdir(output);
 for (const file of [...files, "assets", ...(productPages.length ? ["products"] : [])]) {
   await cp(path.join(root, file), path.join(output, file), { recursive: true, errorOnExist: true, force: false });
+}
+if (process.env.NETLIFY === "true" && process.env.CONTEXT === "production") {
+  const commit = process.env.COMMIT_REF;
+  if (!/^[a-f0-9]{40}$/.test(commit ?? "")) throw new Error("A Netlify production build commit is required.");
+  await writeFile(path.join(output, "website-build.json"), JSON.stringify({ commit, context: "production" }) + "\n", { flag: "wx" });
 }

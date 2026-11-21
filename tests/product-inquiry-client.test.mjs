@@ -11,7 +11,7 @@ const product = {
   title: "Wooden Christmas Ornament – Bells", price: "10.00", sku: "VOC-OT-008", quantity: 2,
 };
 
-async function browser({ local = false, reply, hold } = {}) {
+async function browser({ local = false, reply, hold, quantity = product.quantity } = {}) {
   class Field {
     value = "";
     disabled = false;
@@ -45,7 +45,7 @@ async function browser({ local = false, reply, hold } = {}) {
   form.elements.fulfillment_interest.value = "Local pickup";
   const posts = [];
   const fetch = async (path, init) => {
-    if (path === "/product-inquiry-catalog.json") return Response.json([product]);
+    if (path === "/product-inquiry-catalog.json") return Response.json([{ ...product, quantity }]);
     posts.push({ path, ...init });
     if (hold) await hold;
     const body = JSON.parse(init.body);
@@ -98,6 +98,13 @@ test("stale catalog and generic failures remain customer-safe", async () => {
   await failure.submit();
   assert.match(failure.elements["#product-inquiry-status"].textContent, /couldn’t confirm/i);
   assert.doesNotMatch(failure.elements["#product-inquiry-status"].textContent, /stack|path|blob/i);
+});
+
+test("a sold-out product still opens a usable inquiry form", async () => {
+  const page = await browser({ quantity: 0 });
+  assert.equal(page.elements["#inquiry-product-display"].textContent, product.title);
+  await page.submit();
+  assert.equal(JSON.parse(page.posts[0].body).productId, product.productId);
 });
 
 test("loopback previews never submit customer information", async () => {

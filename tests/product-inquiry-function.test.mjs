@@ -93,13 +93,13 @@ test("unknown, stale, forged and invalid submissions never reach storage", async
   }
 });
 
-test("a Dashboard catalog item with no available quantity is rejected without code changes", async () => {
+test("a listed sold-out product accepts an inquiry and records zero stock", async () => {
   const soldOutProducts = [{ ...product, quantity: 0 }];
   const store = createMemoryInquiryStore();
   const handler = createProductInquiryHandler({
     products: soldOutProducts,
     store,
-    notifier: { async send() { throw new Error("notification must not run"); } },
+    notifier: { async send() {} },
     clock: () => new Date("2026-11-20T18:30:00.000Z"),
     logger: quiet,
   });
@@ -107,9 +107,10 @@ test("a Dashboard catalog item with no available quantity is rejected without co
     ...valid,
     catalogRevision: catalogRevision(soldOutProducts),
   }));
-  assert.equal(response.status, 409);
-  assert.equal((await response.json()).code, "product_unavailable");
-  assert.equal(store.inquiries.size, 0);
+  assert.equal(response.status, 201);
+  assert.equal((await response.json()).inquiryId, id);
+  assert.equal(store.inquiries.get(id).product.quantityAtSubmission, 0);
+  assert.equal(store.inquiries.get(id).product.dashboardProductId, product.productId);
 });
 
 test("request method, origin, encoding and body-size boundaries fail closed", async () => {

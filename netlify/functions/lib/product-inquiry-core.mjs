@@ -100,7 +100,6 @@ function normalizeInput(input, catalog) {
   if (revision !== catalog.revision) return { error: "stale_catalog" };
   const product = catalog.byId.get(productId);
   if (!product) return { error: "unknown_product" };
-  if (product.quantity === 0) return { error: "product_unavailable" };
 
   const customerName = singleLine(input.customerName, 100);
   const email = singleLine(input.email, 254);
@@ -165,12 +164,11 @@ const errorMessage = {
   invalid_request: "Please review the form and try again.",
   stale_catalog: "This product changed. Reload the page and review the current details.",
   unknown_product: "This product is no longer available for inquiry.",
-  product_unavailable: "This product is not currently available for inquiry.",
   invalid_customer_details: "Please review your contact and delivery information.",
 };
 
 function errorStatus(code) {
-  return ["stale_catalog", "product_unavailable"].includes(code) ? 409 : 400;
+  return code === "stale_catalog" ? 409 : 400;
 }
 
 export function createProductInquiryHandler({

@@ -101,7 +101,7 @@ function setupProductInquiry(form) {
       if (!Array.isArray(entries)) throw new Error();
       catalogHash = await sha256(JSON.stringify(entries));
       selectedProduct = entries.find(row => row.slug === slug && typeof row.productId === "string");
-      if (!selectedProduct || selectedProduct.quantity === 0) throw new Error();
+      if (!selectedProduct) throw new Error();
       productDisplay.textContent = selectedProduct.title;
       priceDisplay.textContent = "$" + selectedProduct.price;
       productLink.href = "/products/" + selectedProduct.slug;
@@ -109,7 +109,7 @@ function setupProductInquiry(form) {
       submit.disabled = false;
     } catch {
       productDisplay.textContent = "Choose a product";
-      status.textContent = "Return to Available Now and choose an available product to ask about.";
+      status.textContent = "Return to Available Now and choose a listed product to ask about.";
     }
   }
 
