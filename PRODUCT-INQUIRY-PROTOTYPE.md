@@ -13,7 +13,7 @@ The Function owns two Blob key families:
 - `inquiries/<uuid>.json` — immutable canonical record written with `onlyIfNew`.
 - `notification-status/<uuid>.json` — mutable delivery state updated with ETag conditional writes.
 
-Production uses the site-wide `verified-product-inquiries` store. Deploy Previews, branch deploys and Netlify Dev use the deploy-specific `verified-product-inquiries-preview` store. Unknown contexts fail closed. A Preview cannot select the production store through request data.
+Production uses the site-wide `verified-product-inquiries` store. Deploy Previews, branch deploys and Netlify Dev use the deploy-specific `verified-inquiries-preview` store. With a 24-character deploy ID, Netlify generates the 58-character internal namespace `deploy:<deploy-id>:verified-inquiries-preview`, which remains below its 64-character limit. Unknown contexts fail closed. A Preview cannot select the production store through request data.
 
 ## Acceptance sequence
 

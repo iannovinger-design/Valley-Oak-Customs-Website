@@ -42,6 +42,19 @@ const record = {
   requestHash: "b".repeat(64),
 };
 
+test("generated Blob namespaces remain within Netlify's store-name limit", () => {
+  const deployId = "6b008b2e0992330e671a785b";
+  const previewNamespace = `deploy:${deployId}:${PREVIEW_STORE}`;
+  const productionNamespace = `site:${PRODUCTION_STORE}`;
+
+  assert.equal(PREVIEW_STORE, "verified-inquiries-preview");
+  assert.notEqual(PREVIEW_STORE, "verified-product-inquiries-preview");
+  assert.equal(previewNamespace.length, 58);
+  assert.ok(previewNamespace.length < 64);
+  assert.equal(productionNamespace.length, 31);
+  assert.ok(productionNamespace.length < 64);
+});
+
 test("production and previews select different Blob store ownership", () => {
   const calls = [];
   const sdk = {

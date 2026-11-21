@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 export const PRODUCTION_STORE = "verified-product-inquiries";
-export const PREVIEW_STORE = "verified-product-inquiries-preview";
+export const PREVIEW_STORE = "verified-inquiries-preview";
 
 function deployContext(context) {
   return context?.deploy?.context ?? process.env.CONTEXT ?? "";
