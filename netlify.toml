@@ -30,6 +30,11 @@
     Cache-Control = "public, max-age=300, must-revalidate"
 
 [[redirects]]
+  from = "/products/old-school-chevy-flag-voc-fl-001"
+  to = "/products/old-school-chevy-flag-voc-fl-001.html"
+  status = 200
+
+[[redirects]]
   from = "/products/plasma-cut-steel-wall-art-featuring-a-classic-chevy-squarebody-pickup-voc-fl-002"
   to = "/products/plasma-cut-steel-wall-art-featuring-a-classic-chevy-squarebody-pickup-voc-fl-002.html"
   status = 200

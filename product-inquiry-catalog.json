@@ -14,5 +14,13 @@
     "title": "Squarebody Waving Flag",
     "price": "50.00",
     "quantity": 3
+  },
+  {
+    "slug": "old-school-chevy-flag-voc-fl-001",
+    "productId": "f669cea3-3f50-4d26-8f67-3ca9b1163ab1",
+    "sku": "VOC-FL-001",
+    "title": "Old School Chevy Flag",
+    "price": "50.00",
+    "quantity": 3
   }
 ]
