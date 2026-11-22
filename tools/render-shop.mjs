@@ -9,14 +9,14 @@ export async function renderShop(template, homepage, catalog, publicRoot) {
   if (template.split(placeholder).length !== 2 || !Array.isArray(catalog))
     throw new Error("Shop template or product catalog is invalid.");
 
-  // The unchanged Dashboard bridge already writes this product ID and approved
-  // primary image to each homepage card. The catalog supplies the public facts.
+  // Home cards preserve publisher ownership and primary images. Compare stock to the catalog before staging.
   const photos = new Map();
   for (const [, id, markup] of homepage.matchAll(/<a class="available-product-card" data-voc-product-id="([^"]+)"([^]*?)<\/a>/g)) {
     const image = /<img\b[^>]*\bsrc="(\/assets\/products\/[a-z0-9-]+\.(?:png|jpe?g|webp))"/.exec(markup);
     const alt = /<img\b[^>]*\balt="([^"<>]*)"/.exec(markup)?.[1];
     if (!image || photos.has(id)) throw new Error("Shop could not resolve a unique approved image for " + id);
-    photos.set(id, { url: image[1], alt });
+    const stock = /<p class="stock-label">([^<]+)<\/p>/.exec(markup)?.[1];
+    photos.set(id, { url: image[1], alt, stock });
   }
   const seen = new Set();
   const cards = await Promise.all(catalog.map(async product => {
@@ -28,7 +28,8 @@ export async function renderShop(template, homepage, catalog, publicRoot) {
       throw new Error("Invalid Shop catalog entry for " + (product.sku ?? "unknown product"));
     seen.add(slug);
     await access(path.join(publicRoot, image.url.slice(1)));
-    const availability = quantity === 0 ? "Sold Out" : quantity + " available";
+    const availability = quantity === 0 ? "Sold out" : quantity + " available";
+    if (image.stock !== availability) throw new Error("Homepage stock does not match the published catalog for " + slug);
     const productUrl = "/products/" + slug;
     return `<article class="shop-card" data-shop-card>
           <a class="shop-image-link" href="${productUrl}">
