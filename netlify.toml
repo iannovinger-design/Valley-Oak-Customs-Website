@@ -30,6 +30,11 @@
     Cache-Control = "public, max-age=300, must-revalidate"
 
 [[redirects]]
+  from = "/products/chevy-squarebody-waving-flag-wood-voc-fl-003"
+  to = "/products/chevy-squarebody-waving-flag-wood-voc-fl-003.html"
+  status = 200
+
+[[redirects]]
   from = "/products/layered-wooden-reindeer-christmas-ornament-voc-ot-006"
   to = "/products/layered-wooden-reindeer-christmas-ornament-voc-ot-006.html"
   status = 200
