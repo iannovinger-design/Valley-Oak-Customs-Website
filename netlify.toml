@@ -30,6 +30,11 @@
     Cache-Control = "public, max-age=300, must-revalidate"
 
 [[redirects]]
+  from = "/products/layered-wooden-reindeer-christmas-ornament-voc-ot-006"
+  to = "/products/layered-wooden-reindeer-christmas-ornament-voc-ot-006.html"
+  status = 200
+
+[[redirects]]
   from = "/products/old-school-chevy-flag-voc-fl-001"
   to = "/products/old-school-chevy-flag-voc-fl-001.html"
   status = 200
