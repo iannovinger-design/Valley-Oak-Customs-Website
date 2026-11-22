@@ -246,3 +246,58 @@ for (const gallery of document.querySelectorAll("[data-product-gallery]")) {
     for (const slide of slides) slide.setAttribute("aria-pressed", String(slide === selected));
   });
 }
+
+// Enhance the same main image used by both single-photo and gallery listings.
+const productPhoto = document.querySelector(".product-detail-page .physical-product-photo");
+const selectedPhoto = productPhoto?.querySelector("img");
+if (selectedPhoto && typeof HTMLDialogElement !== "undefined" &&
+    typeof HTMLDialogElement.prototype.showModal === "function") {
+  const opener = document.createElement("button");
+  opener.type = "button";
+  opener.className = "photo-enlarge";
+  opener.setAttribute("aria-haspopup", "dialog");
+  const label = document.createElement("span");
+  label.textContent = "Enlarge photo";
+  selectedPhoto.before(opener);
+  opener.append(selectedPhoto, label);
+
+  const dialog = document.createElement("dialog");
+  dialog.className = "product-photo-dialog";
+  dialog.setAttribute("aria-label", "Enlarged product photo");
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "photo-dialog-close";
+  close.textContent = "Close photo";
+  close.autofocus = true;
+  const full = document.createElement("img");
+  full.addEventListener("load", () => {
+    full.style.setProperty("--photo-ratio", full.naturalWidth / full.naturalHeight);
+  });
+  const caption = document.createElement("p");
+  caption.className = "photo-dialog-caption";
+  dialog.append(close, full, caption);
+  document.body.append(dialog);
+
+  opener.addEventListener("click", () => {
+    if (selectedPhoto.complete && selectedPhoto.naturalWidth)
+      full.style.setProperty("--photo-ratio", selectedPhoto.naturalWidth / selectedPhoto.naturalHeight);
+    full.src = selectedPhoto.src;
+    full.alt = selectedPhoto.alt;
+    caption.textContent = productPhoto.querySelector("figcaption")?.textContent.trim() ?? "";
+    caption.hidden = !caption.textContent;
+    dialog.showModal();
+    document.documentElement.classList.add("photo-dialog-open");
+  });
+  close.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", event => {
+    if (event.target !== dialog) return;
+    const bounds = dialog.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right ||
+        event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+  });
+  dialog.addEventListener("close", () => {
+    document.documentElement.classList.remove("photo-dialog-open");
+    full.removeAttribute("src");
+    opener.focus({ preventScroll: true });
+  });
+}
