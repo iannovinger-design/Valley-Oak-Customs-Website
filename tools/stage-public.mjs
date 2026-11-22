@@ -2,15 +2,16 @@ import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { renderShop } from "./render-shop.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const output = path.join(root, ".public-site");
 const files = [
-  "bigfoot.html", "business-signs.html", "chevy-truck-signs.html",
+  "about.html", "bigfoot.html", "business-signs.html", "chevy-truck-signs.html",
   "customer-inspired-designs.html", "favicon.ico", "flags.html", "index.html",
-  "inventory.html", "monogram-request.html", "monograms.html",
+  "gallery.html", "inventory.html", "monogram-request.html", "monograms.html",
   "product-inquiry-catalog.json", "product-inquiry.html", "robots.txt", "script.js",
-  "sitemap.xml", "software-canceled.html", "software-checkout-result.js",
+  "quote.html", "sitemap.xml", "software-canceled.html", "software-checkout-result.js",
   "software-success.html", "software-tester.html", "software.html", "software.js",
   "styles.css", "thanks.html",
 ];
@@ -27,6 +28,9 @@ await mkdir(output);
 for (const file of [...files, "assets", ...(productPages.length ? ["products"] : [])]) {
   await cp(path.join(root, file), path.join(output, file), { recursive: true, errorOnExist: true, force: false });
 }
+const [shop, home, catalog] = await Promise.all(["shop.html", "index.html", "product-inquiry-catalog.json"]
+  .map(file => readFile(path.join(root, file), "utf8")));
+await writeFile(path.join(output, "shop.html"), await renderShop(shop, home, JSON.parse(catalog), output), { flag: "wx" });
 if (process.env.NETLIFY === "true" && process.env.CONTEXT === "production") {
   const commit = process.env.COMMIT_REF;
   if (!/^[a-f0-9]{40}$/.test(commit ?? "")) throw new Error("A Netlify production build commit is required.");

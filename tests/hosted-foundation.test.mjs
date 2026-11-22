@@ -26,8 +26,8 @@ test("production staging hashes public listing files and excludes the marker fro
   build("production");
   const marker = JSON.parse(await readFile(markerFile, "utf8"));
   const listingFiles = ["index.html", "product-inquiry-catalog.json", "sitemap.xml",
-    "products/bells-christmas-ornament-voc-ot-008.html",
-    "assets/products/bells-christmas-ornament-voc-ot-008-4f7731553369.png"];
+    ...(await readdir(path.join(output, "products"))).map(file => "products/" + file),
+    ...(await readdir(path.join(output, "assets", "products"))).map(file => "assets/products/" + file)];
   const hashes = await Promise.all(listingFiles.map(async file => [
     file, createHash("sha256").update(await readFile(path.join(output, file))).digest("hex"),
   ]));
@@ -50,8 +50,7 @@ test("the isolated prototype preserves the Bells listing, page and approved phot
     readFile(new URL("../assets/products/bells-christmas-ornament-voc-ot-008-4f7731553369.png", import.meta.url)),
   ]);
   const catalog = JSON.parse(catalogText);
-  assert.equal(catalog.length, 1);
-  assert.deepEqual(catalog[0], {
+  assert.deepEqual(catalog.find(product => product.sku === "VOC-OT-008"), {
     slug: "bells-christmas-ornament-voc-ot-008",
     productId: "332188eb-35d9-4486-a022-010f7ebde880",
     sku: "VOC-OT-008",
@@ -88,10 +87,13 @@ test("Product Inquiry no longer declares a Native Forms capture surface", async 
 });
 
 test("Quote Request and Monogram Quote remain native and separate", async () => {
-  const [home, monograms, requestPage] = await Promise.all([
-    read("index.html"), read("monograms.html"), read("monogram-request.html"),
+  const [home, quote, monograms, requestPage] = await Promise.all([
+    read("index.html"), read("quote.html"), read("monograms.html"), read("monogram-request.html"),
   ]);
-  assert.match(home, /<form class="quote-form" name="quote-request" method="POST" data-netlify="true" netlify-honeypot="company" enctype="multipart\/form-data" action="\/">/);
+  assert.doesNotMatch(home, /<form\b/);
+  assert.match(quote, /<form class="quote-form" name="quote-request" method="POST" data-netlify="true" netlify-honeypot="company" enctype="multipart\/form-data" action="\/">/);
+  assert.match(quote, /type="hidden" name="form-name" value="quote-request"/);
+  assert.match(quote, /name="reference-image" type="file" accept="image\/\*,\.pdf"/);
   for (const page of [monograms, requestPage]) {
     assert.match(page, /<form class="quote-form" name="monogram-quote" method="POST" data-netlify="true" netlify-honeypot="company" enctype="multipart\/form-data" action="\/"/);
     assert.doesNotMatch(page, /\/api\/product-inquiry/);

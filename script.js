@@ -3,17 +3,80 @@ const nav = document.querySelector(".site-nav");
 const quoteForms = document.querySelectorAll(".quote-form");
 
 if (menuButton && nav) {
+  const primaryLinks = [["/", "Home"], ["/shop", "Shop"], ["/gallery", "Gallery"], ["/quote", "Request a Quote"],
+    ["/about", "About"], ["/software", "Software"]];
+  const pathname = window.location.pathname.replace(/\.html$/, "").replace(/\/$/, "") || "/";
+  const galleries = ["/bigfoot", "/business-signs", "/chevy-truck-signs", "/customer-inspired-designs", "/flags", "/monograms"];
+  const active = pathname === "/index" ? "/" : pathname.startsWith("/products/") || pathname === "/product-inquiry"
+    ? "/shop" : galleries.includes(pathname) ? "/gallery" : pathname === "/monogram-request"
+      ? "/quote" : pathname.startsWith("/software") ? "/software" : pathname;
+  nav.replaceChildren(...primaryLinks.map(([href, label]) => {
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = label;
+    if (href === active) link.setAttribute("aria-current", "page");
+    return link;
+  }));
+  menuButton.setAttribute("data-menu-ready", "");
+  function setMenu(open) {
+    nav.classList.toggle("is-open", open);
+    menuButton.setAttribute("aria-expanded", String(open));
+    menuButton.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  }
+  setMenu(false);
   menuButton.addEventListener("click", () => {
-    const isOpen = nav.classList.toggle("is-open");
-    menuButton.setAttribute("aria-expanded", String(isOpen));
+    setMenu(!nav.classList.contains("is-open"));
   });
 
   nav.addEventListener("click", (event) => {
     if (event.target instanceof HTMLAnchorElement) {
-      nav.classList.remove("is-open");
-      menuButton.setAttribute("aria-expanded", "false");
+      setMenu(false);
     }
   });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && nav.classList.contains("is-open")) {
+      setMenu(false);
+      menuButton.focus();
+    }
+  });
+  const legacyDestinations = { available: "/shop", gallery: "/gallery", about: "/about", quote: "/quote", home: "/" };
+  for (const anchor of document.querySelectorAll("main a[href], .footer-links a[href]")) {
+    const legacy = /^(?:\/(?:index\.html)?|(?:\.\/)?index\.html)#(available|gallery|about|quote|home)$/.exec(anchor.getAttribute("href"));
+    if (legacy) anchor.href = legacyDestinations[legacy[1]];
+  }
+  const footerNav = document.querySelector(".footer-links");
+  if (footerNav) {
+    for (const [href, label] of primaryLinks.slice(1)) {
+      const present = [...footerNav.querySelectorAll("a[href]")].some(link =>
+        new URL(link.href).origin === window.location.origin &&
+        new URL(link.href).pathname.replace(/\.html$/, "") === href);
+      if (present) continue;
+      const link = document.createElement("a");
+      link.className = "footer-link";
+      link.href = href;
+      link.textContent = label;
+      footerNav.append(link);
+    }
+  }
+}
+
+const shopGrid = document.querySelector("[data-shop-grid]");
+if (shopGrid) {
+  const cards = [...shopGrid.querySelectorAll("[data-shop-card]")];
+  const more = document.querySelector("[data-shop-more]");
+  const count = document.querySelector("[data-shop-count]");
+  const pageSize = 12;
+  let visible = 0;
+  function showNext() {
+    const firstNew = visible;
+    visible = Math.min(visible + pageSize, cards.length);
+    cards.forEach((card, index) => { card.hidden = index >= visible; });
+    more.hidden = visible >= cards.length;
+    count.textContent = cards.length > pageSize ? `Showing ${visible} of ${cards.length} products` : "";
+    if (firstNew) cards[firstNew]?.querySelector("a")?.focus();
+  }
+  showNext();
+  more.addEventListener("click", showNext);
 }
 
 quoteForms.forEach((quoteForm) => {
