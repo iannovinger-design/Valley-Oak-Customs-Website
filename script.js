@@ -229,3 +229,20 @@ function setupProductInquiry(form) {
     }
   });
 }
+
+for (const gallery of document.querySelectorAll("[data-product-gallery]")) {
+  const image = gallery.querySelector("figure img");
+  const caption = gallery.querySelector("figcaption");
+  const thumbnails = gallery.querySelector(".product-photo-thumbnails");
+  const slides = [...thumbnails.querySelectorAll("[data-gallery-slide]")];
+  thumbnails.hidden = false;
+  gallery.addEventListener("click", event => {
+    const selected = event.target.closest("[data-gallery-slide]");
+    if (!selected || selected.getAttribute("aria-pressed") === "true") return;
+    image.src = selected.dataset.photoSrc;
+    image.alt = selected.dataset.photoAlt;
+    caption.textContent = selected.dataset.photoCaption;
+    caption.hidden = !selected.dataset.photoCaption;
+    for (const slide of slides) slide.setAttribute("aria-pressed", String(slide === selected));
+  });
+}
