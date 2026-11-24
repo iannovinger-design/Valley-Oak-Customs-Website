@@ -10,7 +10,7 @@ const files = [
   "about.html", "bigfoot.html", "business-signs.html", "chevy-truck-signs.html",
   "customer-inspired-designs.html", "favicon.ico", "flags.html", "index.html",
   "gallery.html", "inventory.html", "monogram-request.html", "monograms.html",
-  "product-inquiry-catalog.json", "product-inquiry.html", "robots.txt", "script.js",
+  "product-inquiry-catalog.json", "product-inquiry.html", "robots.txt", "script.js", "shop.js",
   "quote.html", "sitemap.xml", "software-canceled.html", "software-checkout-result.js",
   "software-success.html", "software-tester.html", "software.html", "software.js",
   "styles.css", "thanks.html",

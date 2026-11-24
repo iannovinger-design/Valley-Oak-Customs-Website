@@ -60,25 +60,6 @@ if (menuButton && nav) {
   }
 }
 
-const shopGrid = document.querySelector("[data-shop-grid]");
-if (shopGrid) {
-  const cards = [...shopGrid.querySelectorAll("[data-shop-card]")];
-  const more = document.querySelector("[data-shop-more]");
-  const count = document.querySelector("[data-shop-count]");
-  const pageSize = 12;
-  let visible = 0;
-  function showNext() {
-    const firstNew = visible;
-    visible = Math.min(visible + pageSize, cards.length);
-    cards.forEach((card, index) => { card.hidden = index >= visible; });
-    more.hidden = visible >= cards.length;
-    count.textContent = cards.length > pageSize ? `Showing ${visible} of ${cards.length} products` : "";
-    if (firstNew) cards[firstNew]?.querySelector("a")?.focus();
-  }
-  showNext();
-  more.addEventListener("click", showNext);
-}
-
 quoteForms.forEach((quoteForm) => {
   quoteForm.addEventListener("submit", async (event) => {
     event.preventDefault();

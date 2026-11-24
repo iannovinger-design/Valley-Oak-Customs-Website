@@ -4,6 +4,13 @@ import path from "node:path";
 const placeholder = "<!-- DASHBOARD SHOP CARDS -->";
 const escape = value => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;")
   .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+const materialCategory = value => {
+  const material = String(value ?? "").toLowerCase();
+  if (material.includes("acrylic")) return "acrylic";
+  if (material.includes("wood") || material.includes("plywood")) return "wood";
+  if (material.includes("steel") || material.includes("metal") || material.includes("aluminum")) return "metal";
+  return "";
+};
 
 export async function renderShop(template, homepage, catalog, publicRoot) {
   if (template.split(placeholder).length !== 2 || !Array.isArray(catalog))
@@ -16,7 +23,8 @@ export async function renderShop(template, homepage, catalog, publicRoot) {
     const alt = /<img\b[^>]*\balt="([^"<>]*)"/.exec(markup)?.[1];
     if (!image || photos.has(id)) throw new Error("Shop could not resolve a unique approved image for " + id);
     const stock = /<p class="stock-label">([^<]+)<\/p>/.exec(markup)?.[1];
-    photos.set(id, { url: image[1], alt, stock });
+    const material = /<div class="available-product-copy"><h3>[^]*?<\/h3><p>([^<]*)<\/p>/.exec(markup)?.[1];
+    photos.set(id, { url: image[1], alt, stock, material: materialCategory(material) });
   }
   const seen = new Set();
   const cards = await Promise.all(catalog.map(async product => {
@@ -31,7 +39,7 @@ export async function renderShop(template, homepage, catalog, publicRoot) {
     const availability = quantity === 0 ? "Sold out" : quantity + " available";
     if (image.stock !== availability) throw new Error("Homepage stock does not match the published catalog for " + slug);
     const productUrl = "/products/" + slug;
-    return `<article class="shop-card" data-shop-card>
+    return `<article class="shop-card" data-shop-card data-shop-material="${image.material}" data-shop-price="${price}" data-shop-name="${escape(title)}">
           <a class="shop-image-link" href="${productUrl}">
             <img class="available-product-image" src="${image.url}" alt="${image.alt ?? escape(title)}" loading="lazy" decoding="async">
           </a>
