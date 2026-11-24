@@ -44,8 +44,26 @@
           <h1>Available Products</h1>
           <p>Browse finished products and ask us about pickup, shipping, or making another of a sold-out design.</p>
         </div>
+        <div class="shop-controls" data-shop-controls hidden>
+          <fieldset class="shop-filter-group">
+            <legend>Filter by material</legend>
+            <div class="shop-filter-buttons" data-shop-filters></div>
+          </fieldset>
+          <label class="shop-sort-label" for="shop-sort">Sort products
+            <select id="shop-sort" data-shop-sort>
+              <option value="default">Default</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="name-asc">Name: A to Z</option>
+            </select>
+          </label>
+        </div>
         <div class="shop-grid" data-shop-grid>
           <!-- DASHBOARD SHOP CARDS -->
+        </div>
+        <div class="shop-empty" data-shop-empty hidden>
+          <p>No products match this material filter.</p>
+          <button type="button" class="button secondary dark" data-shop-reset>Show All Products</button>
         </div>
         <div class="shop-pagination">
           <button type="button" class="button primary" data-shop-more hidden>Load More</button>
@@ -75,5 +93,6 @@
       </nav>
     </footer>
     <script src="/script.js"></script>
+    <script type="module" src="/shop.js"></script>
   </body>
 </html>
