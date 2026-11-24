@@ -17,6 +17,14 @@ test("Phase 13 homepage messaging and responsive grid are present", async () => 
   assert.match(css, /repeat\(4, minmax\(0, 1fr\)\)/);
 });
 
+test("selected Shop material filters keep high-contrast theme and interaction states", async () => {
+  const css = await read("styles.css");
+  assert.match(css, /\.shop-filter-button\[aria-pressed="true"\]\s*\{[^}]*color:\s*#fff;[^}]*background:\s*var\(--steel\);/);
+  assert.match(css, /\.shop-filter-button:hover\s*\{[^}]*border-color:\s*var\(--rust\);/);
+  assert.match(css, /\.shop-filter-button\[aria-pressed="true"\]:hover\s*\{[^}]*background:\s*var\(--ink\);/);
+  assert.match(css, /\.shop-controls button:focus-visible[^}]*outline:\s*2px solid var\(--rust\);/);
+});
+
 test("Shop renderer derives supported materials without changing the catalog schema", async () => {
   const shop = await renderShop(await read("shop.html"), await read("index.html"), catalog, fileURLToPath(root));
   assert.equal([...shop.matchAll(/data-shop-card/g)].length, 5);

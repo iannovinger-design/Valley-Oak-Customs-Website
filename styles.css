@@ -1664,7 +1664,9 @@ svg.footer-icon {
   font-weight: 700;
   cursor: pointer;
 }
-.shop-filter-button[aria-pressed="true"] { border-color: var(--pine); color: #fff; background: var(--pine); }
+.shop-filter-button:hover { border-color: var(--rust); background: var(--paper); }
+.shop-filter-button[aria-pressed="true"] { border-color: var(--steel); color: #fff; background: var(--steel); }
+.shop-filter-button[aria-pressed="true"]:hover { border-color: var(--ink); background: var(--ink); }
 .shop-sort-label { display: grid; flex: 0 0 auto; gap: 8px; }
 .shop-sort-label select { min-height: 42px; padding: 8px 36px 8px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: #fff; font: inherit; }
 .shop-empty { margin: 28px 0; padding: 28px; border: 1px dashed var(--line); border-radius: 14px; text-align: center; }
