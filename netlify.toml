@@ -30,6 +30,11 @@
     Cache-Control = "public, max-age=300, must-revalidate"
 
 [[redirects]]
+  from = "/products/christmas-ornament-boy-on-sled-large-voc-ot-007"
+  to = "/products/christmas-ornament-boy-on-sled-large-voc-ot-007.html"
+  status = 200
+
+[[redirects]]
   from = "/products/chevy-squarebody-waving-flag-wood-voc-fl-003"
   to = "/products/chevy-squarebody-waving-flag-wood-voc-fl-003.html"
   status = 200
